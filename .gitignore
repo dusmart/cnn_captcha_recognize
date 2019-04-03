@@ -1,0 +1,4 @@
+.vscode/*
+labels/*
+flattened_data/*
+__pycache__/*
