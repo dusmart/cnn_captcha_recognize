@@ -1,7 +1,6 @@
 import os
 import pickle
 import collections
-import numpy as np
 import random
 from tqdm import tqdm
 
@@ -135,6 +134,56 @@ def make_word_vocab(file_name, output_path, freq_lower_bound=0, quiet=False, use
     with open(idx2word_path,'wb') as f:
         pickle.dump(idx_to_word,f)
 
+def make_preposition_vocab(file_name, preposition_path, preposition2id_path, id2preposition_path, freq_lower_bound=0, quiet=False, use_lower_bound = False):
+    with open(file_name,'r') as f:
+        data = f.readlines()
+
+    origin_data = []
+    sentence = []
+    for i in tqdm(range(len(data))):
+        if len(data[i].strip())>0:
+            sentence.append(data[i].strip().split('\t'))
+        else:
+            origin_data.append(sentence)
+            sentence = []
+    if len(sentence) > 0:
+        origin_data.append(sentence)
+
+    preposition_data = []
+    for sentence in origin_data:
+        for line in sentence:
+            if line[4] == 'IN':
+                preposition_data.append(line[2])
+                
+    preposition_data_counter = collections.Counter(preposition_data).most_common()
+
+    if use_lower_bound:
+        preposition_vocab = [_PAD_,_UNK_] + [item[0] for item in preposition_data_counter if item[1]>=freq_lower_bound]
+    else:
+        preposition_vocab = [_PAD_,_UNK_] + [item[0] for item in preposition_data_counter]
+
+
+    preposition_to_idx = {preposition:idx for idx,preposition in enumerate(preposition_vocab)}
+
+    idx_to_preposition = {idx:preposition for idx,preposition in enumerate(preposition_vocab)}
+
+
+    if not quiet:
+        print('\tpreposition vocab size:{}'.format(len(preposition_vocab)))
+
+    if not quiet:
+        print('\tdump vocab at:{}'.format(preposition_path))
+
+    with open(preposition_path, 'w') as f:
+        f.write('\n'.join(preposition_vocab))
+
+    with open(preposition2id_path,'wb') as f:
+        pickle.dump(preposition_to_idx,f)
+
+    with open(id2preposition_path,'wb') as f:
+        pickle.dump(idx_to_preposition,f)
+ 
+    
 
 def make_pos_vocab(file_name, output_path, freq_lower_bound=0, quiet=False, use_lower_bound = False):
 
