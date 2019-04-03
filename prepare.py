@@ -10,4 +10,4 @@ from data_utils import *
 
 #make_arg_vocab(raw_train_data_path, raw_dev_data_path, raw_test_data_path, arg_vocab_path, arg2id_path, id2arg_path)
 
-make_preposition_vocab(raw_train_data_path, preposition_vocab_path, preposition2id_path, id2preposition_path)
+make_preposition_vocab(raw_train_data_path, preposition_vocab_path, preposition2id_path, id2preposition_path, freq_lower_bound=500, use_lower_bound=True)
