@@ -1,0 +1,9 @@
+id, name, only_verb, verb_by_verb, data_set, purity, collocation, explanation
+id, experiment, verb predicate/all predicate, calculate together/ verb by berb, data set, purity, collocation
+
+0, baseline, true, true, dev, 0.636, 0.653
+1, baseline, true, true, test, 0.663, 0.685
+2, baseline, true, true, train, 0.659, 0.682
+3, baseline, false, true, test, 0.583, 0.504, compared_to_1 only_do_with_verb_is_good_by_10%
+4, split-phase, true, true, test, 0.708, 0.521, left_right_to_predicate and verb_voice is useful
+5, split-phase-with-24preposition, true, true, test, 0.708 0.521, preposition information is useless
