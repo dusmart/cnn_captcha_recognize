@@ -1,6 +1,17 @@
 import pickle
 from tqdm import tqdm
 from parameters import *
+import time
+
+def exeTime(func):
+    def newFunc(*args, **args2):
+        t0 = time.time()
+        print("@%s, {%s} start" % (time.strftime("%X", time.localtime()), func.__name__))
+        back = func(*args, **args2)
+        print("@%s, {%s} end" % (time.strftime("%X", time.localtime()), func.__name__))
+        print("@%.3fs taken for {%s}" % (time.time() - t0, func.__name__))
+        return back
+    return newFunc
 
 with open(deprel2id_path, 'rb') as fin:
     deprel2id = pickle.load(fin)
@@ -54,11 +65,12 @@ def get_label(flattened_data_path):
                 predicts[predicate][deprel].add(idx)
     return groundtruths, predicts
 
+@exeTime
 def main():
     truths, predicts = get_label(flattened_train_data_path)
-    from evaluation import eval_f1
-    #pre, coll, _, _ = eval_f1(truths, predicts)
-    #print(pre, coll)
+    from evaluation import fast_eval_f1, eval_f1
+    pre, coll, _, _ = fast_eval_f1(truths, predicts)
+    print(pre, coll)
 
     truths_combine = {'combine': init_arg_dict.copy()}
     predicts_combine = {'combine': init_deprel_dict.copy()}
@@ -69,7 +81,7 @@ def main():
         for key in predicts[word].keys():
             predicts_combine['combine'][key] = predicts_combine['combine'][key] | predicts[word][key]
     
-    pre, coll, _, _ = eval_f1(truths_combine, predicts_combine)
+    pre, coll, _, _ = fast_eval_f1(truths_combine, predicts_combine)
     print(pre, coll)
 
 if __name__ == "__main__":

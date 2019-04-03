@@ -9,13 +9,13 @@ with open(arg2id_path, 'rb') as fin:
 with open(preposition2id_path, 'rb') as fin:
     preposition2id = pickle.load(fin)
 
-prepositions = []
+prepositions = set(preposition2id.keys())
 
 init_key_dict = {(deprel, verbvoice, rela_position, preposition) :set() 
     for deprel in deprel2id.keys()
     for verbvoice in ['a', 'p'] 
     for rela_position in ['l', 'r']
-    for preposition in preposition2id.keys()}
+    for preposition in prepositions}
 init_arg_dict = {arg:set() for arg in arg2id.keys()}
 
 
@@ -39,7 +39,7 @@ def get_label(flattened_data_path):
                     if word_info[-1] != '_':
                         rela_position = 'r' if int(word_info[4]) > predicate_id else 'l'
                         verbvoice = 'p' if sentence[predicate_id-1][8] == 'VBN' else 'a'
-                        preposition = '<PAD>' if word_info[8] != 'IN' else word_info[6]
+                        preposition = '<PAD>' if word_info[8] != 'IN' or word_info[8] not in prepositions else word_info[6]
                         deprel = word_info[12]
                         arg = word_info[14]
                         idx = (word_info[0],word_info[1],word_info[4])
@@ -71,8 +71,8 @@ def get_label(flattened_data_path):
 
 def main():
     truths, predicts = get_label(flattened_test_data_path)
-    from evaluation import eval_f1
-    pre, coll, _, _ = eval_f1(truths, predicts)
+    from evaluation import fast_eval_f1, eval_f1
+    pre, coll, _, _ = fast_eval_f1(truths, predicts)
     print(pre, coll)
 
     truths_combine = {'combine': init_arg_dict.copy()}
@@ -84,7 +84,7 @@ def main():
         for key in predicts[word].keys():
             predicts_combine['combine'][key] = predicts_combine['combine'][key] | predicts[word][key]
     
-    pre, coll, _, _ = eval_f1(truths_combine, predicts_combine)
+    pre, coll, _, _ = fast_eval_f1(truths_combine, predicts_combine)
     print(pre, coll)
 
 if __name__ == "__main__":
