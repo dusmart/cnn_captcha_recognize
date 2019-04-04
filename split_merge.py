@@ -6,6 +6,7 @@ import scipy.spatial.distance
 from evaluation import evaluation
 from typing import *
 from data_utils import _UNK_, _PAD_, _ROOT_, _NUM_
+from copy import deepcopy
 
 
 with open(deprel2id_path, 'rb') as fin:
@@ -50,7 +51,7 @@ class Cluster:
             return 0
         return self.lex_sim(other)
     def __iadd__(self, other):
-        self.data.extend(other.data)
+        self.data += other.data
         self.data.sort()
         self.lex += other.lex
         self.pos += other.pos
@@ -76,9 +77,6 @@ init_key_dict = {(deprel, verbvoice, rela_position) :Cluster([])
 init_arg_dict = {arg:[] for arg in arg2id.keys()}
 
 
-
-
-
 def split_phase(flattened_data_path):
     groundtruths = dict()
     predicts = dict()
@@ -99,7 +97,7 @@ def split_phase(flattened_data_path):
                         verbvoice = 'p' if sentence[predicate_id-1][8] == 'VBN' else 'a'
                         deprel = word_info[12]
                         arg = word_info[14]
-                        idx = (word_info[0],word_info[1],word_info[4])
+                        idx = (int(word_info[0]),int(word_info[1]),int(word_info[4]))
                         groundtruths[predicate][arg].append(idx)
                         predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[8],sentence[int(word_info[10])-1][6])
             sentence = []
@@ -110,50 +108,55 @@ def split_phase(flattened_data_path):
                 predicate = word_info[6]
                 predicate_id = int(word_info[4])
                 if predicate not in groundtruths:
-                    groundtruths[predicate] = init_arg_dict.copy()
-                    predicts[predicate] = init_key_dict.copy()
+                    groundtruths[predicate] = deepcopy(init_arg_dict)
+                    predicts[predicate] = deepcopy(init_key_dict)
             sentence.append(word_info)
     assert(len(sentence)==0 and predicate is None)
     return groundtruths, predicts
 
 def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str, Dict[Any, Any]]:
     print("=== merging ===")
-    
-    for word, clusters_dict in tqdm(predicts.items()):
-        clusters = sorted(clusters_dict.values(), key = len)
-        predicts[word] = clusters
+
+    no_zero_predicts = dict()
+    for word in predicts.keys():
+        no_zero_predicts[word] = []
+        for key in predicts[word].keys():
+            if len(predicts[word][key]) != 0:
+                no_zero_predicts[word].append(predicts[word][key])
+        no_zero_predicts[word].sort(key = len, reverse=True)
+
     for gamma in tqdm(np.arange(0.95, 0, -0.05)):
         Cluster.GAMMA = gamma
-        for beta in np.arange(0.95, 0, -0.05):
+        for beta in tqdm(np.arange(0.95, 0, -0.05)):
             Cluster.BETA = beta
-            #predict_clusters = dict()
-            for word, clusters_dict in tqdm(predicts.items()):
+            for word in no_zero_predicts.keys():
                 c_i, c_j = 0, 0
-                #clusters = sorted(clusters_dict.values(), key = len)
-                while c_i < len(clusters):
+                while c_i < len(no_zero_predicts[word]):
                     c_j, max_score = -1, 0
                     for j in range(c_i):
-                        score = clusters[c_i].score(clusters[j])
+                        score = no_zero_predicts[word][c_i].score(no_zero_predicts[word][j])
                         if score > max_score:
                             max_score = score
                             c_j = j
                     if max_score > alpha:
-                        clusters[c_j] += clusters[c_i]
-                        clusters.pop(c_i)
+                        no_zero_predicts[word][c_j] += no_zero_predicts[word][c_i]
+                        del no_zero_predicts[word][c_i]
                     else:
                         c_i += 1
     
-    for word, clusters_list in tqdm(predicts.items()):
+    final_predicts = dict()
+    for word, clusters_list in no_zero_predicts.items():
         clusters_dict = {i: cluster for i, cluster in enumerate(clusters_list)}
-        predicts[word] = clusters_dict
-    
-    return predicts
+        final_predicts[word] = clusters_dict
+    return final_predicts
 
 
 def main():
     truths, predicts = split_phase(flattened_test_data_path)
-    merge_phases(predicts, 0.3)
     pre, coll, f1 = evaluation(truths, predicts)
+    print(pre, coll, f1)
+    final_pre = merge_phases(predicts, 0.3)
+    pre, coll, f1 = evaluation(truths, final_pre)
     print(pre, coll, f1)
 
     # 1. combine all those verb's clusters together and calculate new result

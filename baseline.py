@@ -3,6 +3,7 @@ from tqdm import tqdm
 from parameters import *
 import time
 from evaluation import evaluation
+from copy import deepcopy
 
 def exeTime(func):
     def newFunc(*args, **args2):
@@ -50,11 +51,11 @@ def get_label(flattened_data_path):
             sentence = []
             predicate = None
         else:
-            if word_info[3] == '1' and 'V' == word_info[8][0]:
+            if word_info[3] == '1':
                 predicate = word_info[6]
                 if predicate not in groundtruths:
-                    groundtruths[predicate] = init_arg_dict.copy()
-                    predicts[predicate] = init_deprel_dict.copy()
+                    groundtruths[predicate] = deepcopy(init_arg_dict)
+                    predicts[predicate] = deepcopy(init_deprel_dict)
             sentence.append(word_info)
     if len(sentence) != 0 and predicate is not None:
         for word_info in sentence:
@@ -68,7 +69,7 @@ def get_label(flattened_data_path):
 
 @exeTime
 def main():
-    truths, predicts = get_label(flattened_train_data_path)
+    truths, predicts = get_label(flattened_test_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
     # set_truths, set_predicts = dict(), dict()
@@ -81,17 +82,17 @@ def main():
     #         set_predicts[word][pre_label] = set(predicts[word][pre_label])
     # pre, coll, _, _ = eval_f1(set_truths, set_predicts)
 
-    truths_combine = {'combine': init_arg_dict.copy()}
-    predicts_combine = {'combine': init_deprel_dict.copy()}
-    for word in truths:
-        for key in truths[word].keys():
-            truths_combine['combine'][key] = truths_combine['combine'][key] | truths[word][key]
-    for word in predicts:
-        for key in predicts[word].keys():
-            predicts_combine['combine'][key] = predicts_combine['combine'][key] | predicts[word][key]
+    # truths_combine = {'combine': init_arg_dict.copy()}
+    # predicts_combine = {'combine': init_deprel_dict.copy()}
+    # for word in truths:
+    #     for key in truths[word].keys():
+    #         truths_combine['combine'][key] = truths_combine['combine'][key] + truths[word][key]
+    # for word in predicts:
+    #     for key in predicts[word].keys():
+    #         predicts_combine['combine'][key] = predicts_combine['combine'][key] + predicts[word][key]
     
-    pre, coll, f1 = evaluation(truths_combine, predicts_combine)
-    print(pre, coll, f1)
+    # pre, coll, f1 = evaluation(truths_combine, predicts_combine)
+    # print(pre, coll, f1)
 
 if __name__ == "__main__":
     main()
