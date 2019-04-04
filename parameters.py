@@ -29,5 +29,8 @@ preposition_vocab_path = os.path.join(labels_path, "preposition_vocab")
 preposition2id_path = os.path.join(labels_path, "preposition2id")
 id2preposition_path = os.path.join(labels_path, "id2preposition")
 
+arghead_vocab_path = os.path.join(labels_path, "arghead_vocab")
+arghead2id_path = os.path.join(labels_path, "arghead2id")
+id2arghead_path = os.path.join(labels_path, "id2arghead")
 
 
