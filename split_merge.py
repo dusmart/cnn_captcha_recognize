@@ -29,6 +29,10 @@ class Cluster:
     def pos_sim(self, other) -> float:
         return 1 - scipy.spatial.distance.cosine(self.pos, other.pos)
     def lex_sim(self, other) -> float:
+        if abs(sum(self.lex)) < 0.00001:
+            return 0.5
+        elif abs(sum(other.lex)) < 0.00001:
+            return 0.5
         return 1 - scipy.spatial.distance.cosine(self.lex, other.lex)
     def cons_sim(self, other) -> float:
         viol = 0
