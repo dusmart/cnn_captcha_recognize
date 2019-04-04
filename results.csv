@@ -1,9 +1,14 @@
-id, name, only_verb, verb_by_verb, data_set, purity, collocation, explanation
+id, name, only_verb, verb_by_verb, data_set, purity, collocation, f1, explanation
 id, experiment, verb predicate/all predicate, calculate together/ verb by berb, data set, purity, collocation
 
-0, baseline, true, true, dev, 0.636, 0.653
-1, baseline, true, true, test, 0.663, 0.685
-2, baseline, true, true, train, 0.659, 0.682
-3, baseline, false, true, test, 0.583, 0.504, compared_to_1 only_do_with_verb_is_good_by_10%
-4, split-phase, true, true, test, 0.708, 0.521, left_right_to_predicate and verb_voice is useful
-5, split-phase-with-24preposition, true, true, test, 0.708 0.521, preposition information is useless
+0, baseline, true, true, dev, 0.845 0.839 0.842
+1, baseline, true, true, test, 0.834 0.841 0.837
+2, baseline, true, true, train, 0.787 0.784 0.786
+
+3, baseline, true, false, dev, 0.636 0.653 0.644
+4, baseline, true, false, test, 0.663, 0.685, 0.673, verb by verb is a good idea
+5, baseline, true, false, train, 0.659 0.682 0.671
+
+6, baseline, false, true, test, 0.794, 0.790, 0.792, compared_to_1 only_do_with_verb_is_good_by_10%
+7, split-phase, true, true, test, 0.895, 0.738, 0.809, left_right_to_predicate and verb_voice is useful
+8, split-phase-with-24preposition, true, true, test, 0.708 0.521, preposition information is useless
