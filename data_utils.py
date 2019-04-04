@@ -2,7 +2,9 @@ import os
 import pickle
 import collections
 import random
+import numpy as np
 from tqdm import tqdm
+from typing import List, Dict, Set, Callable
 
 _UNK_ = '<UNK>'
 _PAD_ = '<PAD>'
@@ -10,12 +12,16 @@ _ROOT_ = '<ROOT>'
 _NUM_ = '<NUM>'
 
 class Vertex:
+    """ vertex for dependency tree
+    """
     def __init__(self, id, head):
         self.id = id
         self.head = head
         self.children = []
 
-def is_valid_tree(sentence, rd_node, cur_node):
+def is_valid_tree(sentence: List[List[str]], rd_node: int, cur_node: int) -> bool:
+    """ judge if cur_node is not in the path from rd_node to root
+    """
     if rd_node == 0:
         return True
     if rd_node == cur_node:
@@ -30,7 +36,7 @@ def is_valid_tree(sentence, rd_node, cur_node):
     return True
 
 
-def is_scientific_notation(s):
+def is_scientific_notation(s: str) -> bool:
     s = str(s)
     if s.count(',')>=1:
         sl = s.split(',')
@@ -40,7 +46,7 @@ def is_scientific_notation(s):
         return True   
     return False
 
-def is_float(s):
+def is_float(s: str) -> bool:
     s = str(s)
     if s.count('.')==1:
         sl = s.split('.')
@@ -54,10 +60,10 @@ def is_float(s):
             return True
     return False
 
-def is_fraction(s):
+def is_fraction(s: str) -> bool:
     s = str(s)
-    if s.count('\/')==1:
-        sl = s.split('\/')
+    if s.count('\\/')==1:
+        sl = s.split('\\/')
         if len(sl)== 2 and sl[0].isdigit() and sl[1].isdigit():
             return True  
     if s.count('/')==1:
@@ -68,382 +74,117 @@ def is_fraction(s):
         return True
     return False
 
-
-def is_number(s):
+def is_number(s: str) -> bool:
     s = str(s)
     if s.isdigit() or is_float(s) or is_fraction(s) or is_scientific_notation(s):
         return True
     else:
         return False
 
-def make_word_vocab(file_name, output_path, freq_lower_bound=0, quiet=False, use_lower_bound = False):
-
-    with open(file_name,'r') as f:
-        data = f.readlines()
-
-    origin_data = []
-    sentence = []
-    for i in range(len(data)):
-        if len(data[i].strip())>0:
-            sentence.append(data[i].strip().split('\t'))
-        else:
-            origin_data.append(sentence)
-            sentence = []
-
-    if len(sentence) > 0:
-        origin_data.append(sentence)
-
-    word_data = []
-    for sentence in origin_data:
-        for line in sentence:
-            if not is_number(line[1].lower()):
-                word_data.append(line[1].lower())
-                
-
-    word_data_counter = collections.Counter(word_data).most_common()
-
-    if use_lower_bound:
-        word_vocab = [_PAD_,_UNK_,_ROOT_,_NUM_] + [item[0] for item in word_data_counter if item[1]>=freq_lower_bound]
-    else:
-        word_vocab = [_PAD_,_UNK_,_ROOT_,_NUM_] + [item[0] for item in word_data_counter]
-
-
-    word_to_idx = {word:idx for idx,word in enumerate(word_vocab)}
-
-    idx_to_word = {idx:word for idx,word in enumerate(word_vocab)}
-
-
-    if not quiet:
-        print('\tword vocab size:{}'.format(len(word_vocab)))
-
-    if not quiet:
-        print('\tdump vocab at:{}'.format(output_path))
-
-    vocab_path = os.path.join(output_path,'word.vocab')
-
-    word2idx_path = os.path.join(output_path,'word2idx.bin')
-
-    idx2word_path = os.path.join(output_path,'idx2word.bin')
-
-    with open(vocab_path, 'w') as f:
-        f.write('\n'.join(word_vocab))
-
-    with open(word2idx_path,'wb') as f:
-        pickle.dump(word_to_idx,f)
-
-    with open(idx2word_path,'wb') as f:
-        pickle.dump(idx_to_word,f)
-
-def make_preposition_vocab(file_name, preposition_path, preposition2id_path, id2preposition_path, freq_lower_bound=0, quiet=False, use_lower_bound = False):
-    with open(file_name,'r') as f:
-        data = f.readlines()
-
-    origin_data = []
-    sentence = []
-    for i in tqdm(range(len(data))):
-        if len(data[i].strip())>0:
-            sentence.append(data[i].strip().split('\t'))
-        else:
-            origin_data.append(sentence)
-            sentence = []
-    if len(sentence) > 0:
-        origin_data.append(sentence)
-
-    preposition_data = []
-    for sentence in origin_data:
-        for line in sentence:
-            if line[4] == 'IN':
-                preposition_data.append(line[2])
-                
-    preposition_data_counter = collections.Counter(preposition_data).most_common()
-
-    if use_lower_bound:
-        preposition_vocab = [_PAD_,_UNK_] + [item[0] for item in preposition_data_counter if item[1]>=freq_lower_bound]
-    else:
-        preposition_vocab = [_PAD_,_UNK_] + [item[0] for item in preposition_data_counter]
-
-
-    preposition_to_idx = {preposition:idx for idx,preposition in enumerate(preposition_vocab)}
-
-    idx_to_preposition = {idx:preposition for idx,preposition in enumerate(preposition_vocab)}
-
-
-    if not quiet:
-        print('\tpreposition vocab size:{}'.format(len(preposition_vocab)))
-
-    if not quiet:
-        print('\tdump vocab at:{}'.format(preposition_path))
-
-    with open(preposition_path, 'w') as f:
-        f.write('\n'.join(preposition_vocab))
-
-    with open(preposition2id_path,'wb') as f:
-        pickle.dump(preposition_to_idx,f)
-
-    with open(id2preposition_path,'wb') as f:
-        pickle.dump(idx_to_preposition,f)
- 
-    
-
-def make_pos_vocab(file_name, output_path, freq_lower_bound=0, quiet=False, use_lower_bound = False):
-
-    with open(file_name,'r') as f:
-        data = f.readlines()
-
-    origin_data = []
-    sentence = []
-    for i in range(len(data)):
-        if len(data[i].strip())>0:
-            sentence.append(data[i].strip().split('\t'))
-        else:
-            origin_data.append(sentence)
-            sentence = []
-
-    if len(sentence) > 0:
-        origin_data.append(sentence)
-
-    pos_data = []
-    for sentence in origin_data:
-        for line in sentence:
-            pos_data.append(line[5])
-                
-
-    pos_data_counter = collections.Counter(pos_data).most_common()
-
-    if use_lower_bound:
-        pos_vocab = [_PAD_,_UNK_,_ROOT_] + [item[0] for item in pos_data_counter if item[1]>=freq_lower_bound]
-    else:
-        pos_vocab = [_PAD_,_UNK_,_ROOT_] + [item[0] for item in pos_data_counter]
-
-
-    pos_to_idx = {pos:idx for idx,pos in enumerate(pos_vocab)}
-
-    idx_to_pos = {idx:pos for idx,pos in enumerate(pos_vocab)}
-
-
-    if not quiet:
-        print('\tpos tag vocab size:{}'.format(len(pos_vocab)))
-
-    if not quiet:
-        print('\tdump vocab at:{}'.format(output_path))
-
-    vocab_path = os.path.join(output_path,'pos.vocab')
-
-    pos2idx_path = os.path.join(output_path,'pos2idx.bin')
-
-    idx2pos_path = os.path.join(output_path,'idx2pos.bin')
-
-    with open(vocab_path, 'w') as f:
-        f.write('\n'.join(pos_vocab))
-
-    with open(pos2idx_path,'wb') as f:
-        pickle.dump(pos_to_idx,f)
-
-    with open(idx2pos_path,'wb') as f:
-        pickle.dump(idx_to_pos,f)
-
-def make_lemma_vocab(file_name, output_path, freq_lower_bound=0, quiet=False, use_lower_bound = False):
-
-    with open(file_name,'r') as f:
-        data = f.readlines()
-
-    origin_data = []
-    sentence = []
-    for i in range(len(data)):
-        if len(data[i].strip())>0:
-            sentence.append(data[i].strip().split('\t'))
-        else:
-            origin_data.append(sentence)
-            sentence = []
-
-    if len(sentence) > 0:
-        origin_data.append(sentence)
-
-    lemma_data = []
-    for sentence in origin_data:
-        for line in sentence:
-            if not is_number(line[3].lower()):
-                lemma_data.append(line[3].lower())
-                
-    lemma_data_counter = collections.Counter(lemma_data).most_common()
-
-    if use_lower_bound:
-        lemma_vocab = [_PAD_,_UNK_,_ROOT_,_NUM_] + [item[0] for item in lemma_data_counter if item[1]>=freq_lower_bound]
-    else:
-        lemma_vocab = [_PAD_,_UNK_,_ROOT_,_NUM_] + [item[0] for item in lemma_data_counter]
-
-
-    lemma_to_idx = {lemma:idx for idx,lemma in enumerate(lemma_vocab)}
-
-    idx_to_lemma = {idx:lemma for idx,lemma in enumerate(lemma_vocab)}
-
-
-    if not quiet:
-        print('\tlemma vocab size:{}'.format(len(lemma_vocab)))
-
-    if not quiet:
-        print('\tdump vocab at:{}'.format(output_path))
-
-    vocab_path = os.path.join(output_path,'lemma.vocab')
-
-    lemma2idx_path = os.path.join(output_path,'lemma2idx.bin')
-
-    idx2lemma_path = os.path.join(output_path,'idx2lemma.bin')
-
-    with open(vocab_path, 'w') as f:
-        f.write('\n'.join(lemma_vocab))
-
-    with open(lemma2idx_path,'wb') as f:
-        pickle.dump(lemma_to_idx,f)
-
-    with open(idx2lemma_path,'wb') as f:
-        pickle.dump(idx_to_lemma,f)
-
-def make_deprel_vocab(file_name, deprel_path, deprel2id_path, id2deprel_path, freq_lower_bound=0, quiet=False, use_lower_bound = False):
-
-    with open(file_name,'r') as f:
-        data = f.readlines()
-
-    origin_data = []
-    sentence = []
-    for i in tqdm(range(len(data))):
-        if len(data[i].strip())>0:
-            sentence.append(data[i].strip().split('\t'))
-        else:
-            origin_data.append(sentence)
-            sentence = []
-
-    if len(sentence) > 0:
-        origin_data.append(sentence)
-
-    deprel_data = []
-    for sentence in origin_data:
-        for line in sentence:
-            deprel_data.append(line[10])
-                
-    deprel_data_counter = collections.Counter(deprel_data).most_common()
-
-    if use_lower_bound:
-        deprel_vocab = [_PAD_,_UNK_] + [item[0] for item in deprel_data_counter if item[1]>=freq_lower_bound]
-    else:
-        deprel_vocab = [_PAD_,_UNK_] + [item[0] for item in deprel_data_counter]
-
-
-    deprel_to_idx = {deprel:idx for idx,deprel in enumerate(deprel_vocab)}
-
-    idx_to_deprel = {idx:deprel for idx,deprel in enumerate(deprel_vocab)}
-
-
-    if not quiet:
-        print('\tdeprel vocab size:{}'.format(len(deprel_vocab)))
-
-    if not quiet:
-        print('\tdump vocab at:{}'.format(deprel_path))
-
-    with open(deprel_path, 'w') as f:
-        f.write('\n'.join(deprel_vocab))
-
-    with open(deprel2id_path,'wb') as f:
-        pickle.dump(deprel_to_idx,f)
-
-    with open(id2deprel_path,'wb') as f:
-        pickle.dump(idx_to_deprel,f)
-
-def make_arg_vocab(train_file, dev_file, test_file, arg_vocab_path, arg2id_path, id2arg_path, freq_lower_bound=0, quiet=False, use_lower_bound = False):
-
-    argument_data = []
-
-    with open(train_file,'r') as f:
-        data = f.readlines()
-
-    origin_data = []
-    sentence = []
-    for i in range(len(data)):
-        if len(data[i].strip())>0:
-            sentence.append(data[i].strip().split('\t'))
-        else:
-            origin_data.append(sentence)
-            sentence = []
-
-    if len(sentence) > 0:
-        origin_data.append(sentence)
-
-    
-    for sentence in tqdm(origin_data):
-        for line in sentence:
-            for i in range(len(line)-14):
-                argument_data.append(line[14+i])
-
-    if dev_file is not None:
-        with open(dev_file,'r') as f:
+class VocabMaker:
+    def __init__(self):
+        pass
+    def make_vocab(self, file_name: str, vocab_path: str, symbol2idx_path: str, idx2symbol_path: str, symbol_type: str, \
+                    use_lower_bound: bool = False, freq_lower_bound: int = 0, quiet: bool = False) -> None:
+        """ parse Conll09 data file, make a vocabulary and store it to given path
+        filter_func: filt specific word from a sentence and the specific word_line
+        """
+        # 0. get filter and paddings by symbol type
+        padding_symbols = self.get_paddings(symbol_type)
+        filter_func = self.get_filter_funcs(symbol_type)
+        # 1. read sentences
+        with open(file_name,'r') as f:
             data = f.readlines()
-
-        origin_data = []
+        sentences = []
         sentence = []
         for i in range(len(data)):
             if len(data[i].strip())>0:
                 sentence.append(data[i].strip().split('\t'))
             else:
-                origin_data.append(sentence)
+                sentences.append(sentence)
                 sentence = []
-
         if len(sentence) > 0:
-            origin_data.append(sentence)
+            sentences.append(sentence)
+        # 2. add symbols into list
+        symbol_data = []
+        for sentence in tqdm(sentences):
+            for word_line in sentence:
+                filter_func(symbol_data, sentence, word_line)
+        # 3. count add make vocabulary frequency dict
+        symbol_data_counter = collections.Counter(symbol_data).most_common()
+        if use_lower_bound:
+            symbol_vocab = padding_symbols + [item[0] for item in symbol_data_counter if item[1]>=freq_lower_bound]
+        else:
+            symbol_vocab = padding_symbols + [item[0] for item in symbol_data_counter]
+        symbol_to_idx = {word:idx for idx,word in enumerate(symbol_vocab)}
+        idx_to_symbol = {idx:word for idx,word in enumerate(symbol_vocab)}
+        # 4. print infomation
+        if not quiet:
+            print('\t{} vocab size:{}'.format(symbol_type, len(symbol_vocab)))
+            print('\tdump vocab at:{}'.format(vocab_path))
+        # 5. save to file
+        with open(vocab_path, 'w') as f:
+            f.write('\n'.join(vocab_path))
+        with open(symbol2idx_path,'wb') as f:
+            pickle.dump(symbol_to_idx,f)
+        with open(idx2symbol_path,'wb') as f:
+            pickle.dump(idx_to_symbol,f)
 
-        
-        for sentence in origin_data:
-            for line in sentence:
-                for i in range(len(line)-14):
-                    argument_data.append(line[14+i])
+    def get_filter_funcs(self, symbol_type):
+        if symbol_type == "word":
+            def filter_func(symbol_data, sentence, word_line):
+                if not is_number(word_line[1].lower()):
+                    symbol_data.append(word_line[1].lower())
+            return filter_func
+        elif symbol_type == "lemma":
+            def filter_func(symbol_data, sentence, word_line):
+                if not is_number(word_line[3].lower()):
+                    symbol_data.append(word_line[3].lower())
+            return filter_func
+        elif symbol_type == "preposition":
+            def filter_func(symbol_data, sentence, word_line):
+                if word_line[4] == 'IN':
+                    symbol_data.append(word_line[2])
+            return filter_func
+        elif symbol_type == "pos":
+            def filter_func(symbol_data, sentence, word_line):
+                symbol_data.append(word_line[5])
+            return filter_func
+        elif symbol_type == "deprel":
+            def filter_func(symbol_data, sentence, word_line):
+                symbol_data.append(word_line[10])
+            return filter_func
+        elif symbol_type == "arg":
+            def filter_func(symbol_data, sentence, word_line):
+                for i in range(len(word_line)-14):
+                    symbol_data.append(word_line[14+i])
+            return filter_func
+        elif symbol_type == "arghead":
+            def filter_func(symbol_data, sentence, word_line):
+                for i in range(len(word_line)-14):
+                    if word_line[14+i] != '_':
+                        symbol_data.append(sentence[int(word_line[8])-1][2])
+            return filter_func
+        else:
+            raise Exception("symbol type {} not supported now".format(symbol_type))
 
-    if test_file is not None:
-        with open(test_file,'r') as f:
-            data = f.readlines()
-
-        origin_data = []
-        sentence = []
-        for i in range(len(data)):
-            if len(data[i].strip())>0:
-                sentence.append(data[i].strip().split('\t'))
-            else:
-                origin_data.append(sentence)
-                sentence = []
-
-        if len(sentence) > 0:
-            origin_data.append(sentence)
-
-        for sentence in origin_data:
-            for line in sentence:
-                for i in range(len(line)-14):
-                    argument_data.append(line[14+i])
-                
-    argument_data_counter = collections.Counter(argument_data).most_common()
-
-    if use_lower_bound:
-        argument_vocab = [_PAD_,_UNK_] + [item[0] for item in argument_data_counter if item[1]>=freq_lower_bound]
-    else:
-        argument_vocab = [_PAD_,_UNK_] + [item[0] for item in argument_data_counter]
+    def get_paddings(self, symbol_type):
+        if symbol_type == "word" or symbol_type == "lemma":
+            return [_PAD_, _UNK_, _ROOT_, _NUM_]
+        elif symbol_type == "preposition":
+            return [_PAD_, _UNK_]
+        elif symbol_type == "pos":
+            return [_PAD_,_UNK_,_ROOT_]
+        elif symbol_type == "deprel":
+            return [_PAD_,_UNK_]
+        elif symbol_type == "arg":
+            return [_PAD_,_UNK_]
+        elif symbol_type == "arghead":
+            return [_PAD_,_UNK_]
+        else:
+            raise Exception("symbol type {} not supported now".format(symbol_type))
 
 
-    arg_to_id = {argument:idx for idx,argument in enumerate(argument_vocab)}
-
-    id_to_arg = {idx:argument for idx,argument in enumerate(argument_vocab)}
-
-
-    if not quiet:
-        print('\targument vocab size:{}'.format(len(argument_vocab)))
-
-    if not quiet:
-        print('\tdump vocab at:{}'.format(arg_vocab_path))
-
-    with open(arg_vocab_path, 'w') as f:
-        f.write('\n'.join(argument_vocab))
-
-    with open(arg2id_path,'wb') as f:
-        pickle.dump(arg_to_id,f)
-
-    with open(id2arg_path,'wb') as f:
-        pickle.dump(id_to_arg,f)
 
 def count_sentence_predicate(sentence):
     count = 0
@@ -548,7 +289,7 @@ def flat_dataset(dataset_file, output_path):
             # change those number into _NUM_
             for i in range(len(sentence)):
                 word_info = sentence[i]
-                for word_id in range(1, 4):
+                for _ in range(1, 4):
                     if is_number(word_info[1].lower()):
                         word_info[1] = _NUM_
 
@@ -655,9 +396,6 @@ def load_dataset_input(file_path):
         origin_data.append(sentence)
 
     return origin_data
-
-def load_dump_data(path):
-    return pickle.load(open(path,'rb'))
 
 def load_deprel_vocab(path):
     with open(path,'r') as f:
