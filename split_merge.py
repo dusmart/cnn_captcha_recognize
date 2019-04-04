@@ -5,6 +5,7 @@ import numpy as np
 import scipy.spatial.distance
 from evaluation import evaluation
 from typing import *
+from data_utils import _UNK_, _PAD_, _ROOT_, _NUM_
 
 
 with open(deprel2id_path, 'rb') as fin:
@@ -17,13 +18,6 @@ with open(pos2id_path, 'rb') as fin:
     pos2id = pickle.load(fin)
 
 
-init_key_dict = {(deprel, verbvoice, rela_position) :[]
-    for deprel in deprel2id.keys()
-    for verbvoice in ['a', 'p']
-    for rela_position in ['l', 'r']}
-init_arg_dict = {arg:[] for arg in arg2id.keys()}
-
-
 class Cluster:
     BETA = 0
     GAMMA = 0
@@ -31,26 +25,25 @@ class Cluster:
         self.data = data
         self.lex = np.array([0] * len(arghead2id))
         self.pos = np.array([0] * len(pos2id))
-    def pos_sim(self, other):
+    def pos_sim(self, other) -> float:
         return 1 - scipy.spatial.distance.cosine(self.pos, other.pos)
-    def lex_sim(self, other):
+    def lex_sim(self, other) -> float:
         return 1 - scipy.spatial.distance.cosine(self.lex, other.lex)
-    def cons_sim(self, other):
+    def cons_sim(self, other) -> float:
         viol = 0
-        i, j = 0, 0
+        i, j, i_, j_ = 0, 0, 0, 0
         while i < len(self.data) and j < len(other.data):
-            if self.data[i][0] == other.data[i][0] and self.data[i][1] == other.data[i][1]:
-                viol += 1
-                i += 1
-                j += 1
-            elif self.data[i] < other.data[j]:
-                i += 1
-            else:
-                j += 1
+            viol += int(self.data[i][0] == other.data[j][0] and self.data[i][1] == other.data[j][1])
+            i_ = int(self.data[i][0] <= other.data[j][0] or self.data[i][1] <= other.data[j][1])
+            j_ = int(self.data[i][0] >= other.data[j][0] and self.data[i][1] >= other.data[j][1])
+            i += i_
+            j += j_
         return 1 - 2 * viol / (len(self.data) + len(other.data))
-    def score(self, other, beta, gamma):
+    def score(self, other) -> float:
         """ calculate the similarity between two clusters
         """
+        if len(self) == 0 or len(other) == 0:
+            return 1
         if self.pos_sim(other) < Cluster.BETA:
             return 0
         elif self.cons_sim(other) < Cluster.GAMMA:
@@ -61,6 +54,27 @@ class Cluster:
         self.data.sort()
         self.lex += other.lex
         self.pos += other.pos
+        return self
+    def __len__(self):
+        return len(self.data)
+    def append(self, value, pos, arghead):
+        self.data.append(value)
+        if arghead in arghead2id:
+            self.lex[arghead2id[arghead]] += 1
+        #else:
+            #print("warning")
+            # self.lex[arghead2id[_UNK_]] += 1
+        self.pos[pos2id[pos]] += 1
+    def __iter__(self):
+        return self.data.__iter__()
+
+
+init_key_dict = {(deprel, verbvoice, rela_position) :Cluster([])
+    for deprel in deprel2id.keys()
+    for verbvoice in ['a', 'p']
+    for rela_position in ['l', 'r']}
+init_arg_dict = {arg:[] for arg in arg2id.keys()}
+
 
 
 
@@ -87,7 +101,7 @@ def split_phase(flattened_data_path):
                         arg = word_info[14]
                         idx = (word_info[0],word_info[1],word_info[4])
                         groundtruths[predicate][arg].append(idx)
-                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx)
+                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[8],sentence[int(word_info[10])-1][6])
             sentence = []
             predicate = None
             predicate_id = -1
@@ -102,9 +116,43 @@ def split_phase(flattened_data_path):
     assert(len(sentence)==0 and predicate is None)
     return groundtruths, predicts
 
+def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str, Dict[Any, Any]]:
+    print("=== merging ===")
+    
+    for word, clusters_dict in tqdm(predicts.items()):
+        clusters = sorted(clusters_dict.values(), key = len)
+        predicts[word] = clusters
+    for gamma in tqdm(np.arange(0.95, 0, -0.05)):
+        Cluster.GAMMA = gamma
+        for beta in np.arange(0.95, 0, -0.05):
+            Cluster.BETA = beta
+            #predict_clusters = dict()
+            for word, clusters_dict in tqdm(predicts.items()):
+                c_i, c_j = 0, 0
+                #clusters = sorted(clusters_dict.values(), key = len)
+                while c_i < len(clusters):
+                    c_j, max_score = -1, 0
+                    for j in range(c_i):
+                        score = clusters[c_i].score(clusters[j])
+                        if score > max_score:
+                            max_score = score
+                            c_j = j
+                    if max_score > alpha:
+                        clusters[c_j] += clusters[c_i]
+                        clusters.pop(c_i)
+                    else:
+                        c_i += 1
+    
+    for word, clusters_list in tqdm(predicts.items()):
+        clusters_dict = {i: cluster for i, cluster in enumerate(clusters_list)}
+        predicts[word] = clusters_dict
+    
+    return predicts
+
 
 def main():
     truths, predicts = split_phase(flattened_test_data_path)
+    merge_phases(predicts, 0.3)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
 
