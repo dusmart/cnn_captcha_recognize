@@ -73,12 +73,16 @@ def evaluation(groundtruths: Dict[str, Dict[Any, List[Any]]],
         for key in predict_same.keys():
             precisions[verb] += predict_same[key]
             pre_base += len(predict[key])
-        precisions[verb] /= pre_base
-        collocations[verb] /= coll_base
+        assert(pre_base == coll_base)
+        if pre_base == 0:
+            precisions[verb] = 1.0
+            collocations[verb] = 1.0
+        else:
+            precisions[verb] /= pre_base
+            collocations[verb] /= coll_base
         
         precisions[verb] = (precisions[verb], pre_base)
         collocations[verb] = (collocations[verb], coll_base)
-        assert(pre_base == coll_base)
     precision = 0
     collocation = 0
     base = 0
@@ -86,7 +90,10 @@ def evaluation(groundtruths: Dict[str, Dict[Any, List[Any]]],
         precision += precisions[verb][0]*precisions[verb][1]
         collocation += collocations[verb][0]*precisions[verb][1]
         base += precisions[verb][1]
-    avg_pre, avg_coll = precision/base, collocation/base
+    if base == 0:
+        avg_pre, avg_coll = 1.0, 1.0
+    else:
+        avg_pre, avg_coll = precision/base, collocation/base
     return avg_pre, avg_coll, 2*avg_coll*avg_pre/(avg_coll+avg_pre)
 
 def main():
@@ -94,6 +101,11 @@ def main():
     predicts = {'is': {'X':[1,2,3,5], 'Y':[4], 'Z':[6,7,8,9,10,11,12]}}
     pre, coll, f1 = evaluation(truths, predicts)
     # 0.6666666666666666 0.8333333333333334 0.7407407407407408
+    print(pre, coll, f1)
+    truths = {'is': {}}
+    predicts = {'is': {}}
+    pre, coll, f1 = evaluation(truths, predicts)
+    # 1.0 1.0 1.0
     print(pre, coll, f1)
 
     truths = {
