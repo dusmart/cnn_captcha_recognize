@@ -124,7 +124,7 @@ class VocabMaker:
             print('\tdump vocab at:{}'.format(vocab_path))
         # 5. save to file
         with open(vocab_path, 'w') as f:
-            f.write('\n'.join(vocab_path))
+            f.write('\n'.join(symbol_vocab))
         with open(symbol2idx_path,'wb') as f:
             pickle.dump(symbol_to_idx,f)
         with open(idx2symbol_path,'wb') as f:
