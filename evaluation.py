@@ -1,8 +1,14 @@
 from tqdm import tqdm
-from multiprocessing import Pool
+import pickle, copy
+from multiprocessing import Pool, Manager
+from parameters import *
+from multiprocessing.dummy import Pool as ThreadPool 
 
-def eval_verb_worker(args):
-    verb, groundtruth, predict = args
+def eval_verb_worker(verb):
+    with open(os.path.join(temp_path, "g-" + verb),'rb') as f:
+        groundtruth = pickle.load(f)
+    with open(os.path.join(temp_path, "p-" + verb), 'rb') as f:
+        predict = pickle.load(f)
     same_matrix = {truth_label:{predict_label:0 for predict_label in predict.keys() } for truth_label in groundtruth.keys()}
     groundtruth_same = {truth_label:0 for truth_label in groundtruth.keys()}
     predict_same = {predict_label:0 for predict_label in predict.keys()}
@@ -32,12 +38,23 @@ def eval_verb_worker(args):
 
 
 def fast_eval_f1(groundtruths, predicts):
+    #for verb in tqdm(groundtruths):
+    def dump_dict(verb):
+        with open(os.path.join(temp_path, "g-" + verb),'wb') as f:
+            pickle.dump(groundtruths[verb],f)
+        with open(os.path.join(temp_path, "p-" + verb), 'wb') as f:
+            pickle.dump(predicts[verb], f)
+    p = ThreadPool(60)
+    _ = list(tqdm(p.imap(dump_dict, groundtruths.keys()), total=len(groundtruths)))
+    p.close()
+    p.join()
+
+
+    with Pool(30) as p:
+      resultList = list(tqdm(p.imap(eval_verb_worker, groundtruths.keys()), total=len(groundtruths)))
+    
     precisions = dict()
     collocations = dict()
-    args = [(verb, groundtruths[verb], predicts[verb]) for verb in groundtruths.keys()]
-    with Pool(10) as p:
-      resultList = list(tqdm(p.imap(eval_verb_worker, args), total=len(args)))
-    
     for verb, precision, collocation, base in resultList:
         precisions[verb] = (precision, base)
         collocations[verb] = (collocation, base)

@@ -3,6 +3,7 @@ import os
 raw_data_path = os.path.join(os.path.dirname(__file__), "raw_data")
 flattened_data_path = os.path.join(os.path.dirname(__file__), "flattened_data")
 labels_path = os.path.join(os.path.dirname(__file__), "labels")
+temp_path = os.path.join(os.path.dirname(__file__), "temp")
 
 
 raw_train_data_path = os.path.join(raw_data_path, "conll09_train.dataset")
