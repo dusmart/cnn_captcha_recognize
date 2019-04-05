@@ -4,7 +4,7 @@ from data_utils import *
 flat_dataset(raw_train_data_path, flattened_train_data_path)
 flat_dataset(raw_test_data_path, flattened_test_data_path)
 flat_dataset(raw_dev_data_path, flattened_dev_data_path)
-flat_dataset(raw_dev_data_path, flattened_sample_data_path)
+flat_dataset(raw_sample_data_path, flattened_sample_data_path)
 
 
 vocab_maker = VocabMaker()
