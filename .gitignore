@@ -3,6 +3,7 @@ labels/*
 flattened_data/*
 __pycache__/*
 temp/*
+pretrained_model/*
 .DS_Store
 .python-version
 
