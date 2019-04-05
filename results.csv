@@ -18,3 +18,4 @@ id, experiment, verb predicate/all predicate, calculate together/ verb by berb, 
 11, split-merge-alpha-0.85, true, true, test, 0.742, 0.825, 0.781, lower alpha -> lower f1
 12, split-merge-alpha-0.05, true, trur, test, 0.686, 0.861, 0.763, lower alpha -> lower f1
 13, split-merge-alpha-0.995, true, true, test, 0.801, 0.810, 0.806, this merge implementation is not good
+14, split-merge-alpha-0.999, true, true, test, 0.807, 0.806, 0.807, this merge implementation is not good
