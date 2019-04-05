@@ -7,7 +7,6 @@ flat_dataset(raw_dev_data_path, flattened_dev_data_path)
 flat_dataset(raw_sample_data_path, flattened_sample_data_path)
 
 print('\n-- shrink pretrained embeding --')
-pretrained_emb_size = 100
 shrink_pretrained_embedding(raw_train_data_path, raw_dev_data_path, raw_test_data_path,
                             pretrained_glove_100, pretrained_emb_size, pretrained_embed_path,
                             id2pretrained_path, pretrained2id_path, pretrained_vocab_path)
