@@ -1,9 +1,11 @@
 from parameters import *
 from data_utils import *
 
-#flat_dataset(raw_train_data_path, flattened_train_data_path)
-#flat_dataset(raw_test_data_path, flattened_test_data_path)
-#flat_dataset(raw_dev_data_path, flattened_dev_data_path)
+flat_dataset(raw_train_data_path, flattened_train_data_path)
+flat_dataset(raw_test_data_path, flattened_test_data_path)
+flat_dataset(raw_dev_data_path, flattened_dev_data_path)
+flat_dataset(raw_dev_data_path, flattened_sample_data_path)
+
 
 vocab_maker = VocabMaker()
 vocab_maker.make_vocab(raw_train_data_path, deprel_vocab_path, deprel2id_path, id2deprel_path, "deprel")

@@ -8,10 +8,12 @@ labels_path = os.path.join(os.path.dirname(__file__), "labels")
 raw_train_data_path = os.path.join(raw_data_path, "conll09_train.dataset")
 raw_test_data_path = os.path.join(raw_data_path, "conll09_test.dataset")
 raw_dev_data_path = os.path.join(raw_data_path, "conll09_dev.dataset")
+raw_sample_data_path = os.path.join(raw_data_path, "conll09_sample.dataset")
 
 flattened_train_data_path = os.path.join(flattened_data_path, "conll09_train.dataset")
 flattened_test_data_path = os.path.join(flattened_data_path, "conll09_test.dataset")
 flattened_dev_data_path = os.path.join(flattened_data_path, "conll09_dev.dataset")
+flattened_sample_data_path = os.path.join(flattened_data_path, "conll09_sample.dataset")
 
 pos_vocab_path = os.path.join(labels_path, "pos_vocab")
 pos2id_path = os.path.join(labels_path, "pos2id")
