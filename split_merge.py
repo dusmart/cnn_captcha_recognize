@@ -5,8 +5,19 @@ import numpy as np
 import scipy.spatial.distance
 from evaluation import evaluation
 from typing import *
-from data_utils import _UNK_, _PAD_, _ROOT_, _NUM_
+from data_utils import _UNK_, _PAD_, _ROOT_, _NUM_, is_number
 from copy import deepcopy
+
+
+def find_argument_head(sentence: List[List[str]], word_info: List[str]) -> List[str]:
+    """ find a child for given word in sentence, return None if not exists
+    """
+    if word_info[8] != "IN":
+        return word_info
+    for i in range(len(sentence)-1, -1, -1):
+        if sentence[i][10] == word_info[4]:
+            return find_argument_head(sentence, sentence[i])
+    return word_info
 
 
 with open(deprel2id_path, 'rb') as fin:
@@ -68,9 +79,6 @@ class Cluster:
             self.lex[arghead2id[arghead]] += 1
         else:
             self.lex += 1/len(self.lex)
-        #else:
-            #print("warning")
-            # self.lex[arghead2id[_UNK_]] += 1
         if pos in pos2id:
             self.pos[pos2id[pos]] += 1
         else:
@@ -107,8 +115,11 @@ def split_phase(flattened_data_path):
                         deprel = word_info[12]
                         arg = word_info[14]
                         idx = (int(word_info[0]),int(word_info[1]),int(word_info[4]))
+                        arghead = find_argument_head(sentence, word_info)[6].lower()
+                        if is_number(arghead):
+                            arghead = _NUM_
                         groundtruths[predicate][arg].append(idx)
-                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[8],sentence[int(word_info[10])-1][6])
+                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[8],arghead)
             sentence = []
             predicate = None
             predicate_id = -1
@@ -152,7 +163,6 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                         del no_zero_predicts[word][c_i]
                     else:
                         c_i += 1
-    
     final_predicts = dict()
     for word, clusters_list in no_zero_predicts.items():
         clusters_dict = {i: cluster for i, cluster in enumerate(clusters_list)}
@@ -161,7 +171,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 
 def main():
-    truths, predicts = split_phase(flattened_test_data_path)
+    truths, predicts = split_phase(flattened_sample_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
     final_pre = merge_phases(predicts, 0.9995)

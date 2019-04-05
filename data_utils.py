@@ -35,6 +35,17 @@ def is_valid_tree(sentence: List[List[str]], rd_node: int, cur_node: int) -> boo
             return False
     return True
 
+def find_argument_head(sentence: List[List[str]], word_info: List[str]) -> List[str]:
+    """ find a child for given word in sentence, return None if not exists
+    """
+    if word_info[4] != "IN":
+        return word_info
+    for i in range(len(sentence)-1, -1, -1):
+        if sentence[i][8] == word_info[0]:
+            return find_argument_head(sentence, sentence[i])
+    return word_info
+        
+
 
 def is_scientific_notation(s: str) -> bool:
     s = str(s)
@@ -138,8 +149,8 @@ class VocabMaker:
             return filter_func
         elif symbol_type == "lemma":
             def filter_func(symbol_data, sentence, word_line):
-                if not is_number(word_line[3].lower()):
-                    symbol_data.append(word_line[3].lower())
+                if not is_number(word_line[2].lower()):
+                    symbol_data.append(word_line[2].lower())
             return filter_func
         elif symbol_type == "preposition":
             def filter_func(symbol_data, sentence, word_line):
@@ -161,9 +172,16 @@ class VocabMaker:
             return filter_func
         elif symbol_type == "arghead":
             def filter_func(symbol_data, sentence, word_line):
+                flag = False
                 for i in range(len(word_line)-14):
                     if word_line[14+i] != '_':
-                        symbol_data.append(sentence[int(word_line[8])-1][2])
+                        flag = True
+                        break
+                if flag:
+                    lemma = find_argument_head(sentence, word_line)[2]
+                    lemma = lemma.lower()
+                    if not is_number(lemma):
+                        symbol_data.append(lemma)
             return filter_func
         else:
             raise Exception("symbol type {} not supported now".format(symbol_type))
@@ -180,7 +198,7 @@ class VocabMaker:
         elif symbol_type == "arg":
             return [_PAD_,_UNK_]
         elif symbol_type == "arghead":
-            return [_PAD_,_UNK_]
+            return [_PAD_,_UNK_, _NUM_]
         else:
             raise Exception("symbol type {} not supported now".format(symbol_type))
 
