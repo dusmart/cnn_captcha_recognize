@@ -212,7 +212,7 @@ def count_sentence_predicate(sentence):
             count += 1
     return count
 
-def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file, pretrained_emb_size, output_path, quiet=False):
+def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file, pretrained_emb_size, pretrained_embed_path, id2pretrained_path, pretrained2id_path, pretrained_vocab_path, quiet=False):
     word_set = set()
     with open(train_file,'r') as f:
         data = f.readlines()
@@ -263,26 +263,18 @@ def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file
         print('\tdataset sum:{} pretrained cover:{} coverage:{:.3}%'.format(len(word_set),len(pretrained_vocab),len(pretrained_vocab)/len(word_set)*100))
 
     if not quiet:
-        print('\tdump vocab at:{}'.format(output_path))
+        print('\tdump vocab at:{}'.format(pretrained_vocab_path))
 
-    vocab_path = os.path.join(output_path,'pretrain.vocab')
-
-    pretrain2idx_path = os.path.join(output_path,'pretrain2idx.bin')
-
-    idx2pretrain_path = os.path.join(output_path,'idx2pretrain.bin')
-
-    pretrain_emb_path = os.path.join(output_path,'pretrain.emb.bin')
-
-    with open(vocab_path, 'w') as f:
+    with open(pretrained_vocab_path, 'w') as f:
         f.write('\n'.join(pretrained_vocab))
 
-    with open(pretrain2idx_path,'wb') as f:
+    with open(pretrained2id_path,'wb') as f:
         pickle.dump(pretrained_to_idx,f)
 
-    with open(idx2pretrain_path,'wb') as f:
+    with open(id2pretrained_path,'wb') as f:
         pickle.dump(idx_to_pretrained,f)
 
-    with open(pretrain_emb_path,'wb') as f:
+    with open(pretrained_embed_path,'wb') as f:
         pickle.dump(pretrained_embedding,f)
 
 

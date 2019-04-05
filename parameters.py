@@ -3,8 +3,10 @@ import os
 raw_data_path = os.path.join(os.path.dirname(__file__), "raw_data")
 flattened_data_path = os.path.join(os.path.dirname(__file__), "flattened_data")
 labels_path = os.path.join(os.path.dirname(__file__), "labels")
+pretrained_model_path = os.path.join(os.path.dirname(__file__), "pretrained_model")
 
 
+pretrained_glove_100 = os.path.join(pretrained_model_path, "glove.100d.txt")
 raw_train_data_path = os.path.join(raw_data_path, "conll09_train.dataset")
 raw_test_data_path = os.path.join(raw_data_path, "conll09_test.dataset")
 raw_dev_data_path = os.path.join(raw_data_path, "conll09_dev.dataset")
@@ -35,4 +37,11 @@ arghead_vocab_path = os.path.join(labels_path, "arghead_vocab")
 arghead2id_path = os.path.join(labels_path, "arghead2id")
 id2arghead_path = os.path.join(labels_path, "id2arghead")
 
+arghead_vocab_path = os.path.join(labels_path, "arghead_vocab")
+arghead2id_path = os.path.join(labels_path, "arghead2id")
+id2arghead_path = os.path.join(labels_path, "id2arghead")
 
+id2pretrained_path = os.path.join(pretrained_model_path, "id2pretrained")
+pretrained2id_path = os.path.join(pretrained_model_path, "pretrained2id")
+pretrained_embed_path = os.path.join(pretrained_model_path, "pretrained.emb")
+pretrained_vocab_path = os.path.join(pretrained_model_path, "pretrained_vocab")
