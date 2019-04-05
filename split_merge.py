@@ -24,8 +24,8 @@ class Cluster:
     GAMMA = 0
     def __init__(self, data: List[Tuple[str,str,str]]) -> None:
         self.data = data
-        self.lex = np.array([0] * len(arghead2id))
-        self.pos = np.array([0] * len(pos2id))
+        self.lex = np.array([0.0] * len(arghead2id))
+        self.pos = np.array([0.0] * len(pos2id))
     def pos_sim(self, other) -> float:
         return 1 - scipy.spatial.distance.cosine(self.pos, other.pos)
     def lex_sim(self, other) -> float:
@@ -66,10 +66,15 @@ class Cluster:
         self.data.append(value)
         if arghead in arghead2id:
             self.lex[arghead2id[arghead]] += 1
+        else:
+            self.lex += 1/len(self.lex)
         #else:
             #print("warning")
             # self.lex[arghead2id[_UNK_]] += 1
-        self.pos[pos2id[pos]] += 1
+        if pos in pos2id:
+            self.pos[pos2id[pos]] += 1
+        else:
+            self.pos += 1/len(self.pos)
     def __iter__(self):
         return self.data.__iter__()
 
@@ -129,9 +134,9 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                 no_zero_predicts[word].append(predicts[word][key])
         no_zero_predicts[word].sort(key = len, reverse=True)
 
-    for gamma in tqdm(np.arange(0.95, 0, -0.05)):
+    for gamma in tqdm(np.arange(0.95, -0.05, -0.05)):
         Cluster.GAMMA = gamma
-        for beta in tqdm(np.arange(0.95, 0, -0.05)):
+        for beta in tqdm(np.arange(0.95, -0.05, -0.05)):
             Cluster.BETA = beta
             for word in no_zero_predicts.keys():
                 c_i, c_j = 0, 0
@@ -159,7 +164,7 @@ def main():
     truths, predicts = split_phase(flattened_test_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
-    final_pre = merge_phases(predicts, 0.3)
+    final_pre = merge_phases(predicts, 0.9995)
     pre, coll, f1 = evaluation(truths, final_pre)
     print(pre, coll, f1)
 
