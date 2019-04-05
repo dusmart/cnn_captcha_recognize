@@ -12,10 +12,4 @@ id, experiment, verb predicate/all predicate, calculate together/ verb by berb, 
 6, baseline, false, true, test, 0.794, 0.790, 0.792, compared to 1 only do with verb is good by 5%
 
 7, split-phase, true, true, test, 0.895, 0.738, 0.809, left_right_to_predicate and verb_voice is useful
-8, split-merge-alpha-0.3, true, true, test, 0.696, 0.846, 0.763, don't merge too much
-9, split-merge-alpha-0.95, true, true, test, 0.769, 0.816, 0.792, don't merge too much
-10, split-merge-alpha-0.9, true, true, test, 0.753, 0.822, 0.786, lower alpha -> lower purity
-11, split-merge-alpha-0.85, true, true, test, 0.742, 0.825, 0.781, lower alpha -> lower f1
-12, split-merge-alpha-0.05, true, trur, test, 0.686, 0.861, 0.763, lower alpha -> lower f1
-13, split-merge-alpha-0.995, true, true, test, 0.801, 0.810, 0.806, this merge implementation is not good
-14, split-merge-alpha-0.999, true, true, test, 0.807, 0.806, 0.807, this merge implementation is not good
+8, split-merge-alpha-0.1, true, true, test, 0.848 0.816 0.832, good signal
