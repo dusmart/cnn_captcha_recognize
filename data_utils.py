@@ -307,10 +307,9 @@ def flat_dataset(dataset_file, output_path):
             # change those number into _NUM_
             for i in range(len(sentence)):
                 word_info = sentence[i]
-                for _ in range(1, 4):
-                    if is_number(word_info[1].lower()):
-                        word_info[1] = _NUM_
-
+                for j in range(1, 4):
+                    if is_number(word_info[j].lower()):
+                        word_info[j] = _NUM_
             predicate_idx = 0
             for i in range(len(sentence)):
                 if sentence[i][12] == 'Y':
@@ -320,114 +319,8 @@ def flat_dataset(dataset_file, output_path):
                         IS_PRED = int(i == j)
                         tag = sentence[j][14+predicate_idx] # APRED
                         output_block.append([str(sidx), str(predicate_idx), str(len(sentence)), str(IS_PRED)]+word_info[0:1]+word_info[1:6]+word_info[8:12]+[tag])
-                    
                     for item in output_block:
                         f.write('\t'.join(item))
                         f.write('\n')
                     f.write('\n')
                     predicate_idx += 1
-
-
-def stat_max_order(dataset_file):
-    with open(dataset_file,'r') as f:
-        data = f.readlines()
-
-    origin_data = []
-    sentence = []
-    for i in range(len(data)):
-        if len(data[i].strip())>0:
-            sentence.append(data[i].strip().split('\t'))
-        else:
-            origin_data.append(sentence)
-            sentence = []
-
-    if len(sentence) > 0:
-        origin_data.append(sentence)
-
-    max_order = 0
-
-    for sidx in tqdm(range(len(origin_data))):
-        sentence = origin_data[sidx]
-        predicate_idx = 0
-
-        for i in range(len(sentence)):
-            if sentence[i][12] == 'Y':
-                
-                argument_set = set()
-                for j in range(len(sentence)):
-                    if sentence[j][14+predicate_idx] != '_':
-                        argument_set.add(int(sentence[j][0]))
-                
-                cur_order = 1
-                while True:
-                    found_set = set()
-                    son_data = []
-                    order_idx = 0
-                    while order_idx < cur_order:
-                        son_order = [[] for _ in range(len(sentence)+1)]
-                        for j in range(len(sentence)):
-                            if len(son_data) == 0:
-                                son_order[int(sentence[j][9])].append(int(sentence[j][0]))
-                            else:
-                                for k in range(len(son_data[-1])):
-                                    if int(sentence[j][9]) in son_data[-1][k]:
-                                        son_order[k].append(int(sentence[j][0]))
-                                        break
-                        son_data.append(son_order)
-                        order_idx += 1
-                    
-                    current_node = int(sentence[i][0])
-                    while True:
-                        for item in son_data:
-                            found_set.update(item[current_node])
-                        if current_node != 0:
-                            current_node = int(sentence[current_node-1][9])
-                        else:
-                            break
-                    if len(argument_set - found_set) > 0:
-                        cur_order += 1
-                    else:
-                        break
-                if cur_order > max_order:
-                    max_order = cur_order
-                predicate_idx += 1
-
-    print('max order:{}'.format(max_order))
-
-
-
-
-def load_dataset_input(file_path):
-    with open(file_path,'r') as f:
-        data = f.readlines()
-
-    origin_data = []
-    sentence = []
-    for i in range(len(data)):
-        if len(data[i].strip())>0:
-            sentence.append(data[i].strip().split('\t'))
-        else:
-            origin_data.append(sentence)
-            sentence = []
-
-    if len(sentence) > 0:
-        origin_data.append(sentence)
-
-    return origin_data
-
-def load_deprel_vocab(path):
-    with open(path,'r') as f:
-        data = f.readlines()
-    
-    data = [item.strip() for item in data if len(item.strip())>0 and item.strip()!=_UNK_ and item.strip()!=_PAD_]
-
-    return data
-
-def output_predict(path, data):
-    with open(path, 'w') as f:
-        for sentence in data:
-            for i in range(len(sentence[0])):
-                line = [str(sentence[j][i]) for j in range(len(sentence))]
-                f.write('\t'.join(line))
-                f.write('\n')
-            f.write('\n')
