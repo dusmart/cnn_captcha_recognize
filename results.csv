@@ -14,3 +14,4 @@ id, experiment, verb predicate/all predicate, calculate together/ verb by berb, 
 7, split-phase, true, true, test, 0.895, 0.738, 0.809, left_right_to_predicate and verb_voice is useful
 8, split-merge-alpha-0.1, true, true, test, 0.848 0.816 0.832, good signal
 9, split-merge-alpha-0.09, true, true, test, 0.846, 0.818, 0.832, lower the slpha
+10, split-merge-alpha-0.08, true, true, test, 0.839 0.820 0.829, bad signal
