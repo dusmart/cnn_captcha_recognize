@@ -36,18 +36,29 @@ with open(pretrained_embed_path, 'rb') as fin:
 class Cluster:
     BETA = 0
     GAMMA = 0
+    LEX_GROUP = 5
     def __init__(self, data: List[Tuple[str,str,str]]) -> None:
         self.data = data
-        self.lex = np.array([0.0] * pretrained_emb_size)
+        self.lex = np.zeros((self.LEX_GROUP, pretrained_emb_size), dtype=np.float32)
+        self.lex_weight = np.zeros((self.LEX_GROUP, ), np.float32)
         self.pos = np.array([0.0] * len(pos2id))
     def pos_sim(self, other) -> float:
         return 1 - scipy.spatial.distance.cosine(self.pos, other.pos)
     def lex_sim(self, other) -> float:
-        if abs(sum(abs(self.lex))) < 0.00001:
-            return 0.5
-        elif abs(sum(abs(other.lex))) < 0.00001:
-            return 0.5
-        return 1 - scipy.spatial.distance.cosine(self.lex, other.lex)
+        scores = np.dot(self.lex, np.transpose(other.lex))
+        for i in range(self.LEX_GROUP):
+            norm1 = np.linalg.norm(self.lex[i, :])
+            norm2 = np.linalg.norm(other.lex[i, :])
+            if abs(norm1) > 0.00001:
+                scores[i, :] /= norm1
+            if abs(norm2) >= 0.00001:
+                scores[:, i] /= norm2
+        weights = np.dot(np.transpose(self.lex_weight), other.lex_weight)
+        #weights /= np.sum(np.sum(weights))
+        weighted_scores = np.multiply(scores, weights)
+        return scores[np.unravel_index(np.argmax(weighted_scores, axis=None), weighted_scores.shape)]
+
+
     def cons_sim(self, other) -> float:
         viol = 0
         i, j, i_, j_ = 0, 0, 0, 0
@@ -69,18 +80,37 @@ class Cluster:
             return 0
         return self.lex_sim(other)
     def __iadd__(self, other):
-        self.lex = (self.lex * len(self.data) + other.lex *len(other.data)) / (len(self.data)+len(other.data))
+        assert(len(self) >= len(other))
+        for i in range(self.LEX_GROUP):
+            if other.lex_weight[i] > 0.999:
+                self.merge_lex(other.lex[i], other.lex_weight[i])
         self.pos += other.pos
         self.data += other.data
         self.data.sort()
         return self
     def __len__(self):
         return len(self.data)
+    def merge_lex(self, embed, weight, target=None):
+        if target is not None:
+            self.lex[target, :] = (self.lex[target, :] * self.lex_weight[target] + embed * weight) / (self.lex_weight[target]+weight)
+            self.lex_weight[target] += weight
+        else:
+            candidate_score = np.dot(self.lex[0, :], np.array(embed))
+            target = 0
+            for i in range(1, self.LEX_GROUP):
+                score = np.dot(self.lex[i], embed)
+                if abs(self.lex_weight[i]) < 0.001:
+                    target = i
+                    break
+                elif score > candidate_score:
+                    target = i
+                    score = candidate_score
+            self.merge_lex(embed, weight, target)
     def append(self, value, pos, arghead):
         if arghead in pretrained2id:
             idx = pretrained2id[arghead]
             embed = embedding[idx]
-            self.lex = (self.lex * len(self.data) + embed) / (len(self.data)+1)
+            self.merge_lex(embed, 1)
         if pos in pos2id:
             self.pos[pos2id[pos]] += 1
         else:
@@ -164,6 +194,11 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                     if max_score > alpha:
                         no_zero_predicts[word][c_j] += no_zero_predicts[word][c_i]
                         del no_zero_predicts[word][c_i]
+                        for c_k in range(c_j, 0, -1):
+                            if len(no_zero_predicts[word][c_k]) > len(no_zero_predicts[word][c_k-1]):
+                                no_zero_predicts[word][c_k], no_zero_predicts[word][c_k-1] = no_zero_predicts[word][c_k-1], no_zero_predicts[word][c_k]
+                            else:
+                                break
                     else:
                         c_i += 1
     final_predicts = dict()
@@ -174,7 +209,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 
 def main():
-    truths, predicts = split_phase(flattened_test_data_path)
+    truths, predicts = split_phase(flattened_sample_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
     final_pre = merge_phases(predicts, 0.88)
