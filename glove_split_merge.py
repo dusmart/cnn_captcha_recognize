@@ -69,10 +69,10 @@ class Cluster:
             return 0
         return self.lex_sim(other)
     def __iadd__(self, other):
-        self.data.sort()
         self.lex = (self.lex * len(self.data) + other.lex *len(other.data)) / (len(self.data)+len(other.data))
         self.pos += other.pos
         self.data += other.data
+        self.data.sort()
         return self
     def __len__(self):
         return len(self.data)
