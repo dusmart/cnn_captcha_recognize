@@ -42,6 +42,9 @@ class Cluster:
         self.lex = np.zeros((self.LEX_GROUP, pretrained_emb_size), dtype=np.float32)
         self.lex_weight = np.zeros((self.LEX_GROUP, ), np.float32)
         self.pos = np.array([0.0] * len(pos2id))
+        self.left_right = np.array([0] * 2)
+        self.verb_voice = np.array([0] * 2)
+        self.relation = np.array([0] * len(deprel2id))
     def pos_sim(self, other) -> float:
         return 1 - scipy.spatial.distance.cosine(self.pos, other.pos)
     def lex_sim(self, other) -> float:
@@ -58,7 +61,11 @@ class Cluster:
         weighted_scores = np.multiply(scores, weights)
         return scores[np.unravel_index(np.argmax(weighted_scores, axis=None), weighted_scores.shape)]
 
-
+    def syn_sim(self, other) -> float:
+        position = 1 - scipy.spatial.distance.cosine(self.left_right, other.left_right)
+        voice = 1 - scipy.spatial.distance.cosine(self.verb_voice, other.verb_voice)
+        relation = 1 - scipy.spatial.distance.cosine(self.relation, other.relation)
+        return (position + voice + relation) / 3
     def cons_sim(self, other) -> float:
         viol = 0
         i, j, i_, j_ = 0, 0, 0, 0
@@ -86,6 +93,9 @@ class Cluster:
                 self.merge_lex(other.lex[i], other.lex_weight[i])
         self.pos += other.pos
         self.data += other.data
+        self.left_right += other.left_right
+        self.relation += other.relation
+        self.verb_voice += other.verb_voice
         self.data.sort()
         return self
     def __len__(self):
@@ -106,7 +116,7 @@ class Cluster:
                     target = i
                     score = candidate_score
             self.merge_lex(embed, weight, target)
-    def append(self, value, pos, arghead):
+    def append(self, value, pos, arghead, left_right, verb_voice, deprel):
         if arghead in pretrained2id:
             idx = pretrained2id[arghead]
             embed = embedding[idx]
@@ -115,6 +125,15 @@ class Cluster:
             self.pos[pos2id[pos]] += 1
         else:
             self.pos += 1/len(self.pos)
+        if left_right == "l":
+            self.left_right[0] += 1
+        else:
+            self.left_right[1] += 1
+        if verb_voice == "a":
+            self.verb_voice[0] += 1
+        else:
+            self.verb_voice[1] += 1
+        self.relation[deprel2id[deprel]] += 1
         self.data.append(value)
     def __iter__(self):
         return self.data.__iter__()
@@ -152,7 +171,7 @@ def split_phase(flattened_data_path):
                         if is_number(arghead):
                             arghead = _NUM_
                         groundtruths[predicate][arg].append(idx)
-                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[8],arghead)
+                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[8],arghead,rela_position,verbvoice,deprel)
             sentence = []
             predicate = None
             predicate_id = -1
@@ -178,9 +197,9 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                 no_zero_predicts[word].append(predicts[word][key])
         no_zero_predicts[word].sort(key = len, reverse=True)
 
-    for gamma in tqdm(np.arange(0.95, -0.05, -0.05)):
+    for gamma in tqdm(np.arange(0.95, 0.5, -0.05)):
         Cluster.GAMMA = gamma
-        for beta in tqdm(np.arange(0.95, -0.05, -0.05)):
+        for beta in tqdm(np.arange(0.95, -0.05, -0.1)):
             Cluster.BETA = beta
             for word in no_zero_predicts.keys():
                 c_i, c_j = 0, 0
@@ -212,7 +231,7 @@ def main():
     truths, predicts = split_phase(flattened_sample_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
-    final_pre = merge_phases(predicts, 0.88)
+    final_pre = merge_phases(predicts, 0.98)
     pre, coll, f1 = evaluation(truths, final_pre)
     print(pre, coll, f1)
 
