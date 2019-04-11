@@ -1,31 +1,18 @@
 import pickle
 from tqdm import tqdm
-from parameters import *
 import time
-from evaluation import evaluation
 from copy import deepcopy
+from evaluation import evaluation
+from parameters import *
 
-def exeTime(func):
-    def newFunc(*args, **args2):
-        t0 = time.time()
-        print("@%s, {%s} start" % (time.strftime("%X", time.localtime()), func.__name__))
-        back = func(*args, **args2)
-        print("@%s, {%s} end" % (time.strftime("%X", time.localtime()), func.__name__))
-        print("@%.3fs taken for {%s}" % (time.time() - t0, func.__name__))
-        return back
-    return newFunc
 
 with open(deprel2id_path, 'rb') as fin:
     deprel2id = pickle.load(fin)
 with open(arg2id_path, 'rb') as fin:
     arg2id = pickle.load(fin)
 
-
 init_deprel_dict = {deprel:[] for deprel in deprel2id.keys()}
 init_arg_dict = {arg:[] for arg in arg2id.keys()}
-
-    
-
 
 def get_label(flattened_data_path):
     groundtruths = dict()
@@ -33,8 +20,7 @@ def get_label(flattened_data_path):
     sentences = []
     with open(flattened_data_path, 'r') as fin:
         sentences = fin.readlines()
-
-
+    # cluster arguments according to their dependency relation to their governor
     sentence = []
     predicate = None
     for line in tqdm(sentences):
@@ -42,32 +28,24 @@ def get_label(flattened_data_path):
         if len(word_info) == 0:
             if predicate is not None:
                 for word_info in sentence:
-                    if word_info[-1] != '_':
-                        deprel = word_info[12]
-                        arg = word_info[14]
-                        idx = (word_info[0],word_info[1],word_info[4])
+                    if (is_normal_argument(word_info[FLATTEN2ID[SR]])):
+                        deprel = word_info[FLATTEN2ID[DEPREL]]
+                        arg = word_info[FLATTEN2ID[SR]]
+                        idx = (word_info[FLATTEN2ID[SENT_ID]],word_info[FLATTEN2ID[PREDICATE_ID]],word_info[FLATTEN2ID[WORD_ID]])
                         groundtruths[predicate][arg].append(idx)
                         predicts[predicate][deprel].append(idx)
             sentence = []
             predicate = None
         else:
-            if word_info[3] == '1':
+            if is_predicate(word_info[FLATTEN2ID[IS_PREDICATE]]) and is_verb(word_info[FLATTEN2ID[POS]]):
                 predicate = word_info[6]
                 if predicate not in groundtruths:
                     groundtruths[predicate] = deepcopy(init_arg_dict)
                     predicts[predicate] = deepcopy(init_deprel_dict)
             sentence.append(word_info)
-    if len(sentence) != 0 and predicate is not None:
-        for word_info in sentence:
-            if word_info[-1] != '_':
-                deprel = word_info[12]
-                arg = word_info[14]
-                idx = (word_info[0],word_info[1],word_info[4])
-                groundtruths[predicate][arg].add(idx)
-                predicts[predicate][deprel].add(idx)
+    assert(len(sentence) == 0 and predicate is None)
     return groundtruths, predicts
 
-@exeTime
 def main():
     truths, predicts = get_label(flattened_test_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
