@@ -50,8 +50,15 @@ def is_preposition(pos: str) -> bool:
     """ judeg whether a given pos tag stands for preposition
     """
     return pos == "IN"
-
-
+def is_verb(pos_tag: str) -> bool:
+    """ judeg whether a given pos tag stands for verb
+    """
+    return pos_tag[0] == "V"
+def is_predicate(indicator: str) -> bool:
+    """ judeg whether a given predicate indicator tag stands for verb
+    """
+    # "1" used in flattened data, "Y" used in Conll09 data
+    return indicator == "1" or indicator == "Y"
 
 
 
