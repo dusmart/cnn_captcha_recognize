@@ -1,0 +1,49 @@
+<PAD>
+<UNK>
+<ROOT>
+NN	单数名词
+IN	介词或从属连词 （不包含to）
+NNP	专有名词（单数）
+DT	限定词							不可能是argument
+NNS	复数名词
+JJ	形容词
+,
+.
+CD	基数
+VBD	动词（过去时态）
+RB	副词
+VB	动词（基本形态）
+CC	并列连词							不可能是argument
+VBN	动词（过去分词）
+TO	介词 to							不可能是argument
+VBZ	动词（现在时态，第三人称单数）
+PRP	人称代词
+VBG	动词（动名词或现在分词）
+VBP	动词 （现在时态，非第三人称单数）
+HYPH	a kink of punctuation
+MD	情态动词
+POS	所有格结束词
+PRP$	物主代词
+$
+``
+''
+:
+WDT	Wh限定词（如which book do you like中的which）
+RBR	副词（比较级）
+RP	小品词
+WP	Wh代词（例如用作关系代词的which和that）
+JJR	形容词（比较级）
+WRB	Wh 副词，例如 I like it when you make dinner for me 句子中的 when
+JJS	形容词（最高级）
+)
+(
+EX	表示存在性的 there，例如在 There was a party 句子中。
+RBS	副词（最高级）
+PDT	a kind of determiner 前限定词				不可能是argument
+NNPS	专有名词（复数）
+PRF	介词 PRF
+WP$	wh物主代词，例如 whose
+#
+UH	感叹词
+SYM	符号
+LS	List item marker
