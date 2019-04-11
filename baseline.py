@@ -38,7 +38,7 @@ def get_label(flattened_data_path):
             predicate = None
         else:
             if is_predicate(word_info[FLATTEN2ID[IS_PREDICATE]]) and is_verb(word_info[FLATTEN2ID[POS]]):
-                predicate = word_info[6]
+                predicate = word_info[FLATTEN2ID[LEMMA]]
                 if predicate not in groundtruths:
                     groundtruths[predicate] = deepcopy(init_arg_dict)
                     predicts[predicate] = deepcopy(init_deprel_dict)
