@@ -20,7 +20,7 @@ SR = "sr"
 # suffix _p stand for predicted, _g stand for ground thruth
 ID2CONLL = ['word_id', 'word', 'lemma_g', 'lemma_p', 'pos_g', 'pos_p', 
             'unk_1', 'unk_2', 'dephead_g', 'dephead_p', 
-            'deprel_g', 'deprel_p', 'is_predicate']
+            'deprel_g', 'deprel_p', 'is_predicate', 'predicate_type']
 CONLL2ID = {info: idx for idx, info in enumerate(ID2CONLL)}
 
 # the flattened conll09 data format, see readme for details
