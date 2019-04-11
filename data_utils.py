@@ -24,13 +24,13 @@ def print_exe_time(func):
         return value
     return wapper
 
-NOT_ARGUMENT_HEAD = {"IN", "DT", ""}
+NOT_ARGUMENT_HEAD = {"IN", "DT", "TO"}
 
 def find_argument_head(sentence: List[List[str]], word_info: List[str]) -> List[str]:
     """ find an argument's nominal head
     """
     pos_tag = word_info[CONLL2ID[POS]]
-    if pos_tag != "IN" and pos_tag != "TO":
+    if pos_tag != "IN":
         return word_info
     for i in range(len(sentence)-1, -1, -1):
         if sentence[i][CONLL2ID[DEPHEAD]] == word_info[CONLL2ID[WORD_ID]]:
