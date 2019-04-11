@@ -1,51 +1,62 @@
 import os
+import time
 import pickle
 import collections
 import random
 import numpy as np
 from tqdm import tqdm
 from typing import List, Dict, Set, Callable
+from parameters import *
 
 _UNK_ = '<UNK>'
 _PAD_ = '<PAD>'
 _ROOT_ = '<ROOT>'
 _NUM_ = '<NUM>'
 
-class Vertex:
-    """ vertex for dependency tree
-    """
-    def __init__(self, id, head):
-        self.id = id
-        self.head = head
-        self.children = []
+def print_exe_time(func):
+    def wapper(*args, **kwargs):
+        tic = time.time()
+        # print("@%s, {%s} start" % (time.strftime("%X", time.localtime()), func.__name__))
+        value = func(*args, **kwargs)
+        tac = time.time()
+        # print("@%s, {%s} end" % (time.strftime("%X", time.localtime()), func.__name__))
+        print("===== @%.2fs taken for {%s} =====" % (tac - tic, func.__name__))
+        return value
+    return wapper
 
-def is_valid_tree(sentence: List[List[str]], rd_node: int, cur_node: int) -> bool:
-    """ judge if cur_node is not in the path from rd_node to root
-    """
-    if rd_node == 0:
-        return True
-    if rd_node == cur_node:
-        return False
-    cur_head = int(sentence[rd_node-1][9])
-    if cur_head == cur_node:
-        return False
-    while cur_head != 0:
-        cur_head = int(sentence[cur_head-1][9])
-        if cur_head == cur_node:
-            return False
-    return True
+NOT_ARGUMENT_HEAD = {"IN", "DT", ""}
 
 def find_argument_head(sentence: List[List[str]], word_info: List[str]) -> List[str]:
-    """ find a child for given word in sentence, return None if not exists
+    """ find an argument's nominal head
     """
-    if word_info[4] != "IN":
+    pos_tag = word_info[CONLL2ID[POS]]
+    if pos_tag != "IN" and pos_tag != "TO":
         return word_info
     for i in range(len(sentence)-1, -1, -1):
-        if sentence[i][8] == word_info[0]:
+        if sentence[i][CONLL2ID[DEPHEAD]] == word_info[CONLL2ID[WORD_ID]]:
             return find_argument_head(sentence, sentence[i])
     return word_info
-        
 
+def find_argument_span(sentence: List[List[str]], word_info: List[str]) -> str:
+    result = "|" + word_info[CONLL2ID[LEMMA]].lower() + "|"
+    head = {word_info[CONLL2ID[WORD_ID]]}
+    start = int(word_info[CONLL2ID[WORD_ID]])-1
+    end = int(word_info[CONLL2ID[WORD_ID]])-1
+    for i in range(end+1, len(sentence)):
+        if i < len(sentence) and sentence[i][CONLL2ID[DEPHEAD]] in head:
+            end += 1
+            result += " " + sentence[i][CONLL2ID[LEMMA]].lower()
+            head.add(sentence[i][CONLL2ID[WORD_ID]])
+        else:
+            break
+    for i in range(start-1, -1, -1):
+        if i >= 0 and sentence[i][CONLL2ID[DEPHEAD]] in head:
+            start -= 1
+            result = sentence[i][CONLL2ID[LEMMA]].lower() + " " + result
+            head.add(sentence[i][CONLL2ID[WORD_ID]])
+        else:
+            break
+    return result
 
 def is_scientific_notation(s: str) -> bool:
     s = str(s)
@@ -93,19 +104,29 @@ def is_number(s: str) -> bool:
         return False
 
 class VocabMaker:
-    def __init__(self):
-        pass
-    def make_vocab(self, file_name: str, vocab_path: str, symbol2idx_path: str, idx2symbol_path: str, symbol_type: str, \
+    """ vocabulary maker for different kind of tags from conll09 data
+        vocabulary extraction rule in defined in `get_filter_funcs`
+        default word for some special word will be added by `get_paddings`
+    """
+    def __init__(self, train_data_path: str, test_data_path: str, dev_data_path: str) -> None:
+        self.train_data_path = train_data_path
+        self.test_data_path = test_data_path
+        self.dev_data_path = dev_data_path
+    def make_vocab(self, vocab_path: str, symbol2idx_path: str, idx2symbol_path: str, symbol_type: str, \
                     use_lower_bound: bool = False, freq_lower_bound: int = 0, quiet: bool = False) -> None:
         """ parse Conll09 data file, make a vocabulary and store it to given path
-        filter_func: filt specific word from a sentence and the specific word_line
+        filter_func: filter specific word from a sentence and the specific word_line
         """
         # 0. get filter and paddings by symbol type
         padding_symbols = self.get_paddings(symbol_type)
         filter_func = self.get_filter_funcs(symbol_type)
         # 1. read sentences
-        with open(file_name,'r') as f:
-            data = f.readlines()
+        with open(self.train_data_path,'r') as fin:
+            data = fin.readlines()
+        with open(self.test_data_path, 'r') as fin:
+            data += fin.readlines()
+        with open(self.dev_data_path, 'r') as fin:
+            data += fin.readlines()
         sentences = []
         sentence = []
         for i in range(len(data)):
@@ -135,104 +156,109 @@ class VocabMaker:
             print('\tdump vocab at:{}'.format(vocab_path))
         # 5. save to file
         with open(vocab_path, 'w') as f:
-            f.write('\n'.join(symbol_vocab))
+            for item in symbol_data_counter:
+                f.write(str(item[0]) + "\t" + str(item[1]) + "\n")
         with open(symbol2idx_path,'wb') as f:
             pickle.dump(symbol_to_idx,f)
         with open(idx2symbol_path,'wb') as f:
             pickle.dump(idx_to_symbol,f)
 
     def get_filter_funcs(self, symbol_type):
-        if symbol_type == "word":
+        # to reduce data sparsity, we only add lower non-numeric words
+        if symbol_type == WORD or symbol_type == LEMMA:
             def filter_func(symbol_data, sentence, word_line):
-                if not is_number(word_line[1].lower()):
-                    symbol_data.append(word_line[1].lower())
+                word_lower = word_line[CONLL2ID[symbol_type]].lower()
+                if not is_number(word_lower):
+                    symbol_data.append(word_lower)
             return filter_func
-        elif symbol_type == "lemma":
-            def filter_func(symbol_data, sentence, word_line):
-                if not is_number(word_line[2].lower()):
-                    symbol_data.append(word_line[2].lower())
-            return filter_func
+        # preposition is recognized by there pos tag
         elif symbol_type == "preposition":
             def filter_func(symbol_data, sentence, word_line):
-                if word_line[4] == 'IN':
-                    symbol_data.append(word_line[2])
+                if is_preposition(word_line[CONLL2ID[POS]]):
+                    word_lower = word_line[CONLL2ID[LEMMA]].lower()
+                    if not is_number(word_lower):
+                        symbol_data.append(word_lower)
             return filter_func
-        elif symbol_type == "pos":
+        # directly filter the pos tag or dependency relation from data line
+        elif symbol_type == POS or symbol_type == DEPREL:
             def filter_func(symbol_data, sentence, word_line):
-                symbol_data.append(word_line[5])
+                symbol_data.append(word_line[CONLL2ID[symbol_type]])
             return filter_func
-        elif symbol_type == "deprel":
-            def filter_func(symbol_data, sentence, word_line):
-                symbol_data.append(word_line[10])
-            return filter_func
+        # argument label are lied after those normal tags
         elif symbol_type == "arg":
             def filter_func(symbol_data, sentence, word_line):
-                for i in range(len(word_line)-14):
-                    symbol_data.append(word_line[14+i])
+                for i in range(len(CONLL2ID), len(word_line)):
+                    symbol_data.append(word_line[i])
             return filter_func
-        elif symbol_type == "arghead":
+        # we only interested in normal argument's head information, it's useful head or whole span
+        elif symbol_type == "arghead" or symbol_type == "argspan":
             def filter_func(symbol_data, sentence, word_line):
-                flag = False
-                for i in range(len(word_line)-14):
-                    if word_line[14+i] != '_':
-                        flag = True
-                        break
+                flag = 0
+                for i in range(len(CONLL2ID), len(word_line)):
+                    if is_normal_argument(word_line[i]):
+                        flag += 1
                 if flag:
-                    lemma = find_argument_head(sentence, word_line)[2]
+                    if symbol_type == "arghead":
+                        lemma = find_argument_head(sentence, word_line)[CONLL2ID[LEMMA]]
+                    elif symbol_type == "argspan":
+                        lemma = find_argument_span(sentence, word_line)
                     lemma = lemma.lower()
                     if not is_number(lemma):
-                        symbol_data.append(lemma)
+                        for _ in range(flag):
+                            symbol_data.append(lemma)
             return filter_func
+        # we only interested in normal argument's pos tag
+        elif symbol_type == "arg_pos_rel":
+            def filter_func(symbol_data, sentence, word_line):
+                for i in range(len(CONLL2ID), len(word_line)):
+                    if is_normal_argument(word_line[i]):
+                        symbol_data.append(word_line[CONLL2ID[POS]])
+            return filter_func
+        # we don't support other symbols, add it if you need
         else:
             raise Exception("symbol type {} not supported now".format(symbol_type))
 
     def get_paddings(self, symbol_type):
-        if symbol_type == "word" or symbol_type == "lemma":
+        if symbol_type == WORD or symbol_type == LEMMA:
             return [_PAD_, _UNK_, _ROOT_, _NUM_]
         elif symbol_type == "preposition":
             return [_PAD_, _UNK_]
-        elif symbol_type == "pos":
+        elif symbol_type == POS:
             return [_PAD_,_UNK_,_ROOT_]
-        elif symbol_type == "deprel":
+        elif symbol_type == DEPREL:
             return [_PAD_,_UNK_]
         elif symbol_type == "arg":
             return [_PAD_,_UNK_]
         elif symbol_type == "arghead":
             return [_PAD_,_UNK_, _NUM_]
         else:
-            raise Exception("symbol type {} not supported now".format(symbol_type))
-
-
-
-def count_sentence_predicate(sentence):
-    count = 0
-    for item in sentence:
-        if item[12] == 'Y':
-            assert item[12] == 'Y' and item[13] != '_'
-            count += 1
-    return count
+            return []
 
 def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file, pretrained_emb_size, pretrained_embed_path, id2pretrained_path, pretrained2id_path, pretrained_vocab_path, quiet=False):
+    """ shrink the embedding file to only those words occured in our dataset
+    """
     word_set = set()
     with open(train_file,'r') as f:
         data = f.readlines()
         for line in data:
             if len(line.strip())>0:
                 line = line.strip().split('\t')
-                word_set.add(line[1].lower())
+                word_set.add(line[CONLL2ID[WORD]].lower())
+                word_set.add(line[CONLL2ID[LEMMA]].lower())
     with open(dev_file,'r') as f:
         data = f.readlines()
         for line in data:
             if len(line.strip())>0:
                 line = line.strip().split('\t')
-                word_set.add(line[1].lower())
-
+                word_set.add(line[CONLL2ID[WORD]].lower())
+                word_set.add(line[CONLL2ID[LEMMA]].lower())
     with open(test_file,'r') as f:
         data = f.readlines()
         for line in data:
             if len(line.strip())>0:
                 line = line.strip().split('\t')
-                word_set.add(line[1].lower())
+                word_set.add(line[CONLL2ID[WORD]].lower())
+                word_set.add(line[CONLL2ID[LEMMA]].lower())
 
     pretrained_vocab = [_PAD_,_UNK_,_ROOT_,_NUM_]
     pretrained_embedding = [
@@ -277,11 +303,12 @@ def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file
     with open(pretrained_embed_path,'wb') as f:
         pickle.dump(pretrained_embedding,f)
 
-
+# be careful when changing numbers in this function, I used raw number directly
 def flat_dataset(dataset_file, output_path):
+    """ flatten a conll09 data file to flattened data file, see README for format details
+    """
     with open(dataset_file,'r') as f:
         data = f.readlines()
-
     origin_data = []
     sentence = []
     for i in range(len(data)):
@@ -304,12 +331,12 @@ def flat_dataset(dataset_file, output_path):
                         word_info[j] = _NUM_
             predicate_idx = 0
             for i in range(len(sentence)):
-                if sentence[i][12] == 'Y':
+                if sentence[i][CONLL2ID[IS_PREDICATE]] == 'Y':
                     output_block = []
                     for j in range(len(sentence)):
                         word_info = sentence[j]
                         IS_PRED = int(i == j)
-                        tag = sentence[j][14+predicate_idx] # APRED
+                        tag = sentence[j][14+predicate_idx]
                         output_block.append([str(sidx), str(predicate_idx), str(len(sentence)), str(IS_PRED)]+word_info[0:1]+word_info[1:6]+word_info[8:12]+[tag])
                     for item in output_block:
                         f.write('\t'.join(item))
