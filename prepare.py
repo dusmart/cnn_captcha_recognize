@@ -18,4 +18,4 @@ vocab_maker.make_vocab(raw_train_data_path, arg_vocab_path, arg2id_path, id2arg_
 vocab_maker.make_vocab(raw_train_data_path, pos_vocab_path, pos2id_path, id2pos_path, "pos")
 vocab_maker.make_vocab(raw_train_data_path, preposition_vocab_path, preposition2id_path, id2preposition_path, "preposition", freq_lower_bound=500, use_lower_bound=True)
 vocab_maker.make_vocab(raw_train_data_path, argspan_vocab_path, argspan2id_path, id2argspan_path, "argspan")
-vocab_maker.make_vocab(raw_train_data_path, pos_vocab_path, pos2id_path, id2pos_path, "arg_pos_rel")
+vocab_maker.make_vocab(raw_train_data_path, argpos_vocab_path, argpos2id_path, id2argpos_path, "arg_pos_rel")

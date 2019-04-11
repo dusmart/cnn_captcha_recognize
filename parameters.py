@@ -37,6 +37,10 @@ pos_vocab_path = os.path.join(labels_path, "pos_vocab")
 pos2id_path = os.path.join(labels_path, "pos2id")
 id2pos_path = os.path.join(labels_path, "id2pos")
 
+argpos_vocab_path = os.path.join(labels_path, "argpos_vocab")
+argpos2id_path = os.path.join(labels_path, "argpos2id")
+id2argpos_path = os.path.join(labels_path, "id2argpos")
+
 deprel_vocab_path = os.path.join(labels_path, "deprel_vocab")
 deprel2id_path = os.path.join(labels_path, "deprel2id")
 id2deprel_path = os.path.join(labels_path, "id2deprel")
