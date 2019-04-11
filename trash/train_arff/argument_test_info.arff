@@ -1,0 +1,57 @@
+@relation argument_test_info
+
+@attribute 'rule1' {True, False}
+@attribute 'rule2' {True, False}
+@attribute 'rule3' {True, False}
+@attribute 'rule4' {True, False}
+@attribute 'rule5' {True, False}
+@attribute 'rule6' {True, False}
+@attribute 'rule7' {True, False}
+@attribute 'rule8' {True, False}
+@attribute 'is_argument' {False, True}
+@data
+"False","False","True","True","True","False","False","True","False",{83787}
+"False","False","True","True","True","False","False","True","True",{8841}
+"False","False","True","False","True","True","True","True","False",{8791}
+"True","True","True","True","True","False","False","False","False",{8600}
+"False","True","True","True","True","False","False","False","False",{6017}
+"True","False","True","True","True","False","False","False","False",{5888}
+"False","False","True","False","True","False","True","True","False",{3162}
+"True","False","True","False","True","True","True","False","False",{2980}
+"False","False","True","False","True","False","False","True","False",{2819}
+"False","False","True","True","True","False","True","True","False",{2743}
+"False","False","True","True","False","False","False","True","False",{1854}
+"True","True","True","True","True","False","True","False","False",{1381}
+"False","False","True","False","False","False","True","True","False",{1115}
+"False","False","True","False","True","False","True","True","True",{990}
+"False","False","True","True","True","False","True","True","True",{853}
+"False","False","True","False","True","True","True","True","True",{776}
+"True","True","True","False","True","False","True","False","False",{759}
+"False","True","True","False","True","False","True","False","False",{697}
+"False","True","True","False","True","False","False","False","False",{636}
+"False","True","True","True","True","False","False","False","True",{385}
+"True","True","True","False","True","False","False","False","False",{378}
+"False","True","True","True","False","False","False","False","False",{279}
+"True","False","True","True","True","False","True","False","False",{272}
+"False","False","True","False","True","False","False","True","True",{261}
+"False","False","True","False","False","True","True","True","False",{226}
+"False","True","True","False","True","False","True","False","True",{220}
+"False","True","True","False","True","True","True","False","False",{152}
+"False","False","True","False","False","False","True","True","True",{122}
+"False","True","True","True","True","False","True","False","False",{108}
+"False","False","True","True","False","False","False","True","True",{101}
+"False","False","True","True","False","False","True","True","False",{89}
+"True","False","True","False","True","False","False","False","False",{45}
+"False","False","True","False","False","False","False","True","False",{41}
+"False","True","True","False","True","False","False","False","True",{24}
+"False","False","True","True","False","False","True","True","True",{22}
+"False","True","True","True","True","False","True","False","True",{20}
+"False","True","True","False","False","False","True","False","False",{18}
+"False","True","True","True","False","False","False","False","True",{9}
+"True","False","True","False","True","False","True","False","False",{7}
+"False","True","True","False","False","False","False","False","False",{7}
+"True","False","True","True","True","False","False","False","True",{6}
+"False","False","True","False","False","True","True","True","True",{5}
+"True","False","True","True","True","False","True","False","True",{3}
+"False","True","True","False","False","False","True","False","True",{2}
+"False","False","True","False","False","False","False","True","True",{2}

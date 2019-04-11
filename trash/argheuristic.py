@@ -455,7 +455,7 @@ def find_args(predicate_node):
     rule4(tree)
     rule5(tree)
     rule6(tree)
-    # rule7(tree)
+    rule7(tree)
     rule8(tree)
 
     # At this point, all nodes are marked as "KEPT" or "DISCARDED"
@@ -552,56 +552,27 @@ def rule8(tree):
 
 
 def main():
-    parsed_sentence = ("""1	``	``	``	``	``	_	_	3	30	P	DEP	_	_	_	_	_	_	_
-2	We	we	we	PRP	PRP	_	_	3	3	SBJ	SBJ	_	_	A0	A0	_	_	_
-3	want	want	want	VBP	VBP	_	_	0	30	ROOT	DEP	Y	want.01	_	_	_	_	_
-4	to	to	to	TO	TO	_	_	3	3	OPRD	OPRD	_	_	A1	_	_	_	_
-5	see	see	see	VB	VB	_	_	4	4	IM	IM	Y	see.01	_	_	_	_	_
-6	Nelson	nelson	nelson	NNP	NNP	_	_	7	7	NAME	NAME	_	_	_	_	_	_	_
-7	Mandela	mandela	mandela	NNP	NNP	_	_	5	5	OBJ	OBJ	_	_	_	A1	_	_	_
-8	and	and	and	CC	CC	_	_	7	7	COORD	COORD	_	_	_	_	_	_	_
-9	all	all	all	PDT	PDT	_	_	11	11	NMOD	NMOD	_	_	_	_	_	_	_
-10	our	our	our	PRP$	PRP$	_	_	11	11	NMOD	NMOD	_	_	_	_	A2	_	_
-11	comrades	comrade	comrade	NNS	NNS	_	_	8	8	CONJ	CONJ	Y	comrade.01	_	_	A0	_	_
-12	out	out	out	IN	IN	_	_	5	5	LOC-OPRD	ADV	_	_	_	C-A1	_	_	_
-13	of	of	of	IN	IN	_	_	12	12	AMOD	PMOD	_	_	_	_	_	_	_
-14	prison	prison	prison	NN	NN	_	_	13	13	PMOD	PMOD	_	_	_	_	_	_	_
-15	,	,	,	,	,	_	_	3	3	P	P	_	_	_	_	_	_	_
-16	and	and	and	CC	CC	_	_	3	3	COORD	COORD	_	_	_	_	_	_	_
-17	if	if	if	IN	IN	_	_	23	30	ADV	DEP	_	_	_	_	_	_	AM-ADV
-18	we	we	we	PRP	PRP	_	_	19	19	SBJ	SBJ	_	_	_	_	_	A1	_
-19	are	be	be	VBP	VBP	_	_	17	17	SUB	SUB	_	_	_	_	_	_	_
-20	n't	not	not	RB	RB	_	_	19	19	ADV	ADV	_	_	_	_	_	AM-NEG	_
-21	disciplined	discipline	discipline	VBN	VBN	_	_	19	19	VC	VC	Y	discipline.01	_	_	_	_	_
-22	we	we	we	PRP	PRP	_	_	23	23	SBJ	SBJ	_	_	_	_	_	_	A0
-23	may	may	may	MD	MD	_	_	16	21	CONJ	OBJ	_	_	_	_	_	_	AM-MOD
-24	not	not	not	RB	RB	_	_	23	23	ADV	ADV	_	_	_	_	_	_	AM-NEG
-25	see	see	see	VB	VB	_	_	23	23	VC	VC	Y	see.01	_	_	_	_	_
-26	them	them	them	PRP	PRP	_	_	25	25	OBJ	OBJ	_	_	_	_	_	_	A1
-27	here	here	here	RB	RB	_	_	25	25	LOC-OPRD	LOC	_	_	_	_	_	_	AM-LOC
-28	with	with	with	IN	IN	_	_	27	25	AMOD	ADV	_	_	_	_	_	_	_
-29	us	us	us	PRP	PRP	_	_	28	28	PMOD	PMOD	_	_	_	_	_	_	_
-30	.	.	.	.	.	_	_	3	0	P	ROOT	_	_	_	_	_	_	_
+    parsed_sentence = ("""1	Hoare	hoare	hoare	NNP	NNP	_	_	2	2	NAME	NAME	_	_	_	_
+2	Govett	govett	govett	NNP	NNP	_	_	3	3	SBJ	SBJ	_	_	A0	_
+3	is	be	be	VBZ	VBZ	_	_	0	0	ROOT	ROOT	_	_	_	_
+4	acting	act	act	VBG	VBG	_	_	3	3	VC	VC	Y	act.01	_	_
+5	as	as	as	IN	IN	_	_	4	4	ADV	ADV	_	_	A1	_
+6	the	the	the	DT	DT	_	_	7	7	NMOD	NMOD	_	_	_	_
+7	consortium	consortium	consortium	NN	NN	_	_	10	10	NMOD	NMOD	_	_	_	A2
+8	's	's	's	POS	POS	_	_	7	7	SUFFIX	SUFFIX	_	_	_	_
+9	investment	investment	investment	NN	NN	_	_	10	10	NMOD	NMOD	_	_	_	_
+10	bankers	banker	banker	NNS	NNS	_	_	5	5	PMOD	PMOD	Y	banker.01	_	A0
+11	.	.	.	.	.	_	_	3	3	P	P	_	_	_	_
 """)
     
     treeBuilder = SyntacticTreeBuilder(parsed_sentence)
     initial_tree_list = treeBuilder.tree_list
+  
+    #relation_tree = build_relation_tree(initial_tree_list[0].children[0])    
+    #print(str(relation_tree))
 
-
-    expected = (
-        "mean IDENTITY (more OBJ_DOWN (than AMOD_DOWN (may SUB_DOWN (you SB"
-        "J_DOWN (), know VC_DOWN ()))), will VC_UP (contribution SBJ_DOWN ("
-        "your NMOD_DOWN (), to NMOD_DOWN (goodwill IM_DOWN ())), . P_DOWN ("
-        ")))"
-    )
-        
-    relation_tree = build_relation_tree(initial_tree_list[0].children[0])    
-    print(str(relation_tree))
-    #print(expected)
-    #assert(str(relation_tree) == str(expected))
-
-    expected = set(["contribution", "more"])
-    found = find_args(initial_tree_list[0].children[5])
+    #expected = set(["contribution", "more"])
+    found = find_args(initial_tree_list[0].children[1])
     print(found)
     #assert(set([x.word for x in found]) == expected)
 
