@@ -37,6 +37,7 @@ class Cluster:
     BETA = 0
     GAMMA = 0
     LEX_GROUP = 5
+    DELTA = 0.5
     def __init__(self, data: List[Tuple[str,str,str]]) -> None:
         self.data = data
         self.lex = np.zeros((self.LEX_GROUP, pretrained_emb_size), dtype=np.float32)
@@ -85,7 +86,7 @@ class Cluster:
             return 0
         elif self.cons_sim(other) < Cluster.GAMMA:
             return 0
-        return self.lex_sim(other)
+        return self.lex_sim(other) * self.DELTA + self.syn_sim(other) * (1-self.DELTA)
     def __iadd__(self, other):
         assert(len(self) >= len(other))
         for i in range(self.LEX_GROUP):
@@ -161,13 +162,13 @@ def split_phase(flattened_data_path):
         if len(word_info) == 0:
             if predicate is not None:
                 for word_info in sentence:
-                    if word_info[-1] != '_':
+                    if is_normal_argument(word_info[FLATTEN2ID[SR]]):
                         rela_position = 'r' if int(word_info[4]) > predicate_id else 'l'
-                        verbvoice = 'p' if sentence[predicate_id-1][8] == 'VBN' else 'a'
-                        deprel = word_info[12]
-                        arg = word_info[14]
-                        idx = (int(word_info[0]),int(word_info[1]),int(word_info[4]))
-                        arghead = find_argument_head(sentence, word_info)[6].lower()
+                        verbvoice = 'p' if sentence[predicate_id-1][FLATTEN2ID[POS]] == 'VBN' else 'a'
+                        deprel = word_info[FLATTEN2ID[DEPREL]]
+                        arg = word_info[FLATTEN2ID[SR]]
+                        idx = (int(word_info[FLATTEN2ID[SENT_ID]]),int(word_info[FLATTEN2ID[PREDICATE_ID]]),int(word_info[FLATTEN2ID[WORD_ID]]))
+                        arghead = find_argument_head(sentence, word_info)[FLATTEN2ID[LEMMA]].lower()
                         if is_number(arghead):
                             arghead = _NUM_
                         groundtruths[predicate][arg].append(idx)
@@ -176,9 +177,9 @@ def split_phase(flattened_data_path):
             predicate = None
             predicate_id = -1
         else:
-            if word_info[3] == '1' and 'V' == word_info[8][0]:
-                predicate = word_info[6]
-                predicate_id = int(word_info[4])
+            if is_predicate(word_info[FLATTEN2ID[IS_PREDICATE]]) and is_verb(word_info[FLATTEN2ID[POS]]):
+                predicate = word_info[FLATTEN2ID[LEMMA]]
+                predicate_id = int(word_info[FLATTEN2ID[WORD_ID]])
                 if predicate not in groundtruths:
                     groundtruths[predicate] = deepcopy(init_arg_dict)
                     predicts[predicate] = deepcopy(init_key_dict)
@@ -197,7 +198,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                 no_zero_predicts[word].append(predicts[word][key])
         no_zero_predicts[word].sort(key = len, reverse=True)
 
-    for gamma in tqdm(np.arange(0.95, 0.5, -0.05)):
+    for gamma in tqdm(np.arange(0.95, 0.6, -0.05)):
         Cluster.GAMMA = gamma
         for beta in tqdm(np.arange(0.95, -0.05, -0.1)):
             Cluster.BETA = beta
@@ -228,10 +229,10 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 
 def main():
-    truths, predicts = split_phase(flattened_sample_data_path)
+    truths, predicts = split_phase(flattened_test_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
-    final_pre = merge_phases(predicts, 0.98)
+    final_pre = merge_phases(predicts, 0.6)
     pre, coll, f1 = evaluation(truths, final_pre)
     print(pre, coll, f1)
 
