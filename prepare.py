@@ -12,10 +12,10 @@ shrink_pretrained_embedding(raw_train_data_path, raw_dev_data_path, raw_test_dat
                             id2pretrained_path, pretrained2id_path, pretrained_vocab_path)
 
 
-vocab_maker = VocabMaker()
-vocab_maker.make_vocab(raw_train_data_path, deprel_vocab_path, deprel2id_path, id2deprel_path, "deprel")
-vocab_maker.make_vocab(raw_train_data_path, arg_vocab_path, arg2id_path, id2arg_path, "arg")
-vocab_maker.make_vocab(raw_train_data_path, pos_vocab_path, pos2id_path, id2pos_path, "pos")
-vocab_maker.make_vocab(raw_train_data_path, preposition_vocab_path, preposition2id_path, id2preposition_path, "preposition", freq_lower_bound=500, use_lower_bound=True)
-vocab_maker.make_vocab(raw_train_data_path, argspan_vocab_path, argspan2id_path, id2argspan_path, "argspan")
-vocab_maker.make_vocab(raw_train_data_path, argpos_vocab_path, argpos2id_path, id2argpos_path, "arg_pos_rel")
+vocab_maker = VocabMaker(raw_train_data_path, raw_test_data_path, raw_dev_data_path)
+vocab_maker.make_vocab(deprel_vocab_path, deprel2id_path, id2deprel_path, DEPREL)
+vocab_maker.make_vocab(arg_vocab_path, arg2id_path, id2arg_path, "arg")
+vocab_maker.make_vocab(pos_vocab_path, pos2id_path, id2pos_path, POS)
+vocab_maker.make_vocab(preposition_vocab_path, preposition2id_path, id2preposition_path, "preposition", freq_lower_bound=500, use_lower_bound=True)
+vocab_maker.make_vocab(argspan_vocab_path, argspan2id_path, id2argspan_path, "argspan")
+vocab_maker.make_vocab(argpos_vocab_path, argpos2id_path, id2argpos_path, "arg_pos_rel")

@@ -1,5 +1,21 @@
 import os
 
+USE_GROUNDTRUTH = True
+GROUNDTRUTH = "_g"
+PREDICTED = "_p"
+
+WORD_ID = "word_id"
+WORD = "word"
+LEMMA = "lemma" + GROUNDTRUTH if USE_GROUNDTRUTH else "lemma" + PREDICTED
+POS = "pos" + GROUNDTRUTH if USE_GROUNDTRUTH else "lemma" + PREDICTED
+DEPHEAD = "dephead"  + GROUNDTRUTH if USE_GROUNDTRUTH else "lemma" + PREDICTED
+DEPREL = "deprel"  + GROUNDTRUTH if USE_GROUNDTRUTH else "lemma" + PREDICTED
+IS_PREDICATE = "is_predicate"
+SENT_ID = "sent_id"
+PREDICATE_ID = "predicate_id"
+SENT_LEN = "sent_len"
+SR = "sr"
+
 # the conll09 data format, see readme for details
 # suffix _p stand for predicted, _g stand for ground thruth
 ID2CONLL = ['word_id', 'word', 'lemma_g', 'lemma_p', 'pos_g', 'pos_p', 
@@ -13,6 +29,36 @@ ID2FLATTEN = ["sent_id","predicate_id","sent_len","is_predicate",
             "word_id","word","lemma_g","lemma_p","pos_g","pos_p",
             "dephead_g","dephead_p","deprel_g","deprel_p","sr"]
 FLATTEN2ID = {info: idx for idx, info in enumerate(ID2FLATTEN)}
+
+def is_argument(arg_tag: str) -> bool:
+    """ judge whether given argument tag in Conll09 is an argument
+    """
+    return arg_tag != "_"
+def is_normal_argument(arg_tag: str) -> bool:
+    """ judge whether given argument tag in Conll09 is a normal argument
+    """
+    # not a argument
+    if arg_tag == "_":
+        return False
+    # split argument or co-referential argument
+    elif arg_tag[:2] == "C-" or arg_tag[:2] == "R-":
+        return False
+    # normal argument
+    else:
+        return True
+def is_preposition(pos: str) -> bool:
+    """ judeg whether a given pos tag stands for preposition
+    """
+    return pos == "IN"
+
+
+
+
+
+
+
+
+
 
 raw_data_path = os.path.join(os.path.dirname(__file__), "raw_data")
 flattened_data_path = os.path.join(os.path.dirname(__file__), "flattened_data")
