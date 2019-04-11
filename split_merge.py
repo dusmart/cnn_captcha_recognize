@@ -12,10 +12,10 @@ from copy import deepcopy
 def find_argument_head(sentence: List[List[str]], word_info: List[str]) -> List[str]:
     """ find a child for given word in sentence, return None if not exists
     """
-    if word_info[8] != "IN":
+    if not is_preposition(word_info[FLATTEN2ID[POS]]):
         return word_info
     for i in range(len(sentence)-1, -1, -1):
-        if sentence[i][10] == word_info[4]:
+        if sentence[i][FLATTEN2ID[DEPHEAD]] == word_info[FLATTEN2ID[WORD_ID]]:
             return find_argument_head(sentence, sentence[i])
     return word_info
 
@@ -40,10 +40,6 @@ class Cluster:
     def pos_sim(self, other) -> float:
         return 1 - scipy.spatial.distance.cosine(self.pos, other.pos)
     def lex_sim(self, other) -> float:
-        if abs(sum(self.lex)) < 0.00001:
-            return 0.5
-        elif abs(sum(other.lex)) < 0.00001:
-            return 0.5
         return 1 - scipy.spatial.distance.cosine(self.lex, other.lex)
     def cons_sim(self, other) -> float:
         viol = 0
@@ -109,24 +105,24 @@ def split_phase(flattened_data_path):
         if len(word_info) == 0:
             if predicate is not None:
                 for word_info in sentence:
-                    if word_info[-1] != '_':
+                    if is_normal_argument(word_info[FLATTEN2ID[SR]]):
                         rela_position = 'r' if int(word_info[4]) > predicate_id else 'l'
-                        verbvoice = 'p' if sentence[predicate_id-1][8] == 'VBN' else 'a'
-                        deprel = word_info[12]
-                        arg = word_info[14]
-                        idx = (int(word_info[0]),int(word_info[1]),int(word_info[4]))
-                        arghead = find_argument_head(sentence, word_info)[6].lower()
+                        verbvoice = 'p' if sentence[predicate_id-1][FLATTEN2ID[POS]] == 'VBN' else 'a'
+                        deprel = word_info[FLATTEN2ID[DEPREL]]
+                        arg = word_info[FLATTEN2ID[SR]]
+                        idx = (int(word_info[FLATTEN2ID[SENT_ID]]),int(word_info[FLATTEN2ID[PREDICATE_ID]]),int(word_info[FLATTEN2ID[WORD_ID]]))
+                        arghead = find_argument_head(sentence, word_info)[FLATTEN2ID[LEMMA]].lower()
                         if is_number(arghead):
                             arghead = _NUM_
                         groundtruths[predicate][arg].append(idx)
-                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[8],arghead)
+                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[FLATTEN2ID[POS]],arghead)
             sentence = []
             predicate = None
             predicate_id = -1
         else:
-            if word_info[3] == '1' and 'V' == word_info[8][0]:
-                predicate = word_info[6]
-                predicate_id = int(word_info[4])
+            if is_predicate(word_info[FLATTEN2ID[IS_PREDICATE]]) and is_verb(word_info[FLATTEN2ID[POS]]):
+                predicate = word_info[FLATTEN2ID[LEMMA]]
+                predicate_id = int(word_info[FLATTEN2ID[WORD_ID]])
                 if predicate not in groundtruths:
                     groundtruths[predicate] = deepcopy(init_arg_dict)
                     predicts[predicate] = deepcopy(init_key_dict)
@@ -145,9 +141,9 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                 no_zero_predicts[word].append(predicts[word][key])
         no_zero_predicts[word].sort(key = len, reverse=True)
 
-    for gamma in tqdm(np.arange(0.95, -0.05, -0.05)):
+    for gamma in tqdm(np.arange(0.95, 0.6, -0.05)):
         Cluster.GAMMA = gamma
-        for beta in tqdm(np.arange(0.95, -0.05, -0.05)):
+        for beta in tqdm(np.arange(0.95, -0.05, -0.1)):
             Cluster.BETA = beta
             for word in no_zero_predicts.keys():
                 c_i, c_j = 0, 0
@@ -171,10 +167,10 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 
 def main():
-    truths, predicts = split_phase(flattened_sample_data_path)
+    truths, predicts = split_phase(flattened_test_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
-    final_pre = merge_phases(predicts, 0.9995)
+    final_pre = merge_phases(predicts, 0.1)
     pre, coll, f1 = evaluation(truths, final_pre)
     print(pre, coll, f1)
 
