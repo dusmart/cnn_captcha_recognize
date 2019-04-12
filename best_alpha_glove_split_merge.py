@@ -2,6 +2,7 @@ from glove_split_merge import *
 
 
 def got_best_alpha():
+    Cluster.GAMMA = 0.95
     best_pre, best_coll, best_f1, best_alpha = 0, 0, 0, 0
     truths, predicts = split_phase(flattened_sample_data_path)
     split_pre, split_coll, split_f1 = evaluation(truths, predicts)
