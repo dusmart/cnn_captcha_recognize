@@ -188,7 +188,8 @@ class VocabMaker:
         elif symbol_type == "arg":
             def filter_func(symbol_data, sentence, word_line):
                 for i in range(len(CONLL2ID), len(word_line)):
-                    symbol_data.append(word_line[i])
+                    if is_normal_argument(word_line[i]):
+                        symbol_data.append(word_line[i])
             return filter_func
         # we only interested in normal argument's head information, it's useful head or whole span
         elif symbol_type == "arghead" or symbol_type == "argspan":
