@@ -83,12 +83,6 @@ class Cluster:
         return self.data.__iter__()
 
 
-init_key_dict = {(deprel, verbvoice, rela_position) :Cluster([])
-    for deprel in deprel2id.keys()
-    for verbvoice in ['a', 'p']
-    for rela_position in ['l', 'r']}
-init_arg_dict = {arg:[] for arg in arg2id.keys()}
-
 
 def split_phase(flattened_data_path):
     groundtruths = dict()
@@ -114,7 +108,11 @@ def split_phase(flattened_data_path):
                         arghead = find_argument_head(sentence, word_info)[FLATTEN2ID[LEMMA]].lower()
                         if is_number(arghead):
                             arghead = _NUM_
+                        if arg not in groundtruths[predicate]:
+                            groundtruths[predicate][arg] = []
                         groundtruths[predicate][arg].append(idx)
+                        if (deprel,verbvoice,rela_position) not in predicts[predicate]:
+                            predicts[predicate][(deprel,verbvoice,rela_position)] = Cluster([])
                         predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[FLATTEN2ID[POS]],arghead)
             sentence = []
             predicate = None
@@ -124,8 +122,8 @@ def split_phase(flattened_data_path):
                 predicate = word_info[FLATTEN2ID[LEMMA]]
                 predicate_id = int(word_info[FLATTEN2ID[WORD_ID]])
                 if predicate not in groundtruths:
-                    groundtruths[predicate] = deepcopy(init_arg_dict)
-                    predicts[predicate] = deepcopy(init_key_dict)
+                    groundtruths[predicate] = dict()
+                    predicts[predicate] = dict()
             sentence.append(word_info)
     assert(len(sentence)==0 and predicate is None)
     return groundtruths, predicts
@@ -141,24 +139,22 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                 no_zero_predicts[word].append(predicts[word][key])
         no_zero_predicts[word].sort(key = len, reverse=True)
 
-    for gamma in tqdm(np.arange(0.95, 0.6, -0.05)):
-        Cluster.GAMMA = gamma
-        for beta in tqdm(np.arange(0.95, -0.05, -0.1)):
-            Cluster.BETA = beta
-            for word in no_zero_predicts.keys():
-                c_i, c_j = 0, 0
-                while c_i < len(no_zero_predicts[word]):
-                    c_j, max_score = -1, 0
-                    for j in range(c_i):
-                        score = no_zero_predicts[word][c_i].score(no_zero_predicts[word][j])
-                        if score > max_score:
-                            max_score = score
-                            c_j = j
-                    if max_score > alpha:
-                        no_zero_predicts[word][c_j] += no_zero_predicts[word][c_i]
-                        del no_zero_predicts[word][c_i]
-                    else:
-                        c_i += 1
+    for beta in tqdm(np.arange(0.95, 0.5, -0.1)):
+        Cluster.BETA = beta
+        for word in no_zero_predicts.keys():
+            c_i, c_j = 0, 0
+            while c_i < len(no_zero_predicts[word]):
+                c_j, max_score = -1, 0
+                for j in range(c_i):
+                    score = no_zero_predicts[word][c_i].score(no_zero_predicts[word][j])
+                    if score > max_score:
+                        max_score = score
+                        c_j = j
+                if max_score > alpha:
+                    no_zero_predicts[word][c_j] += no_zero_predicts[word][c_i]
+                    del no_zero_predicts[word][c_i]
+                else:
+                    c_i += 1
     final_predicts = dict()
     for word, clusters_list in no_zero_predicts.items():
         clusters_dict = {i: cluster for i, cluster in enumerate(clusters_list)}
@@ -167,10 +163,12 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 
 def main():
+    Cluster.GAMMA = 0.95
+    ALPHA = 0.1
     truths, predicts = split_phase(flattened_test_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
-    final_pre = merge_phases(predicts, 0.1)
+    final_pre = merge_phases(predicts, ALPHA)
     pre, coll, f1 = evaluation(truths, final_pre)
     print(pre, coll, f1)
 
