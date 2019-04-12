@@ -165,7 +165,7 @@ def split_phase(flattened_data_path):
                         arghead = find_argument_head(sentence, word_info)[FLATTEN2ID[LEMMA]].lower()
                         if is_number(arghead):
                             arghead = _NUM_
-                        if arg no in groundtruths[predicate]:
+                        if arg not in groundtruths[predicate]:
                             groundtruths[predicate] = []
                         groundtruths[predicate][arg].append(idx)
                         if (deprel,verbvoice,rela_position,preposition) not in predicts[predicate]:
