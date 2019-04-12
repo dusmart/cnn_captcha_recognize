@@ -31,13 +31,14 @@ with open(pretrained2id_path, 'rb') as fin:
     pretrained2id = pickle.load(fin)
 with open(pretrained_embed_path, 'rb') as fin:
     embedding = pickle.load(fin)
-
+with open(preposition2id_path, 'rb') as fin:
+    preposition2id = pickle.load(fin)
 
 class Cluster:
     BETA = 0
     GAMMA = 0
     LEX_GROUP = 5
-    DELTA = 0.5
+    DELTA = 1
     def __init__(self, data: List[Tuple[str,str,str]]) -> None:
         self.data = data
         self.lex = np.zeros((self.LEX_GROUP, pretrained_emb_size), dtype=np.float32)
@@ -139,14 +140,6 @@ class Cluster:
     def __iter__(self):
         return self.data.__iter__()
 
-
-init_key_dict = {(deprel, verbvoice, rela_position) :Cluster([])
-    for deprel in deprel2id.keys()
-    for verbvoice in ['a', 'p']
-    for rela_position in ['l', 'r']}
-init_arg_dict = {arg:[] for arg in arg2id.keys()}
-
-
 def split_phase(flattened_data_path):
     groundtruths = dict()
     predicts = dict()
@@ -166,13 +159,18 @@ def split_phase(flattened_data_path):
                         rela_position = 'r' if int(word_info[4]) > predicate_id else 'l'
                         verbvoice = 'p' if sentence[predicate_id-1][FLATTEN2ID[POS]] == 'VBN' else 'a'
                         deprel = word_info[FLATTEN2ID[DEPREL]]
+                        preposition = _PAD_ if word_info[FLATTEN2ID[POS]] not in preposition2id else word_info[FLATTEN2ID[LEMMA]]
                         arg = word_info[FLATTEN2ID[SR]]
                         idx = (int(word_info[FLATTEN2ID[SENT_ID]]),int(word_info[FLATTEN2ID[PREDICATE_ID]]),int(word_info[FLATTEN2ID[WORD_ID]]))
                         arghead = find_argument_head(sentence, word_info)[FLATTEN2ID[LEMMA]].lower()
                         if is_number(arghead):
                             arghead = _NUM_
+                        if arg no in groundtruths[predicate]:
+                            groundtruths[predicate] = []
                         groundtruths[predicate][arg].append(idx)
-                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[8],arghead,rela_position,verbvoice,deprel)
+                        if (deprel,verbvoice,rela_position,preposition) not in predicts[predicate]:
+                            predicts[predicate] = Cluster([])
+                        predicts[predicate][(deprel,verbvoice,rela_position,preposition)].append(idx,word_info[8],arghead,rela_position,verbvoice,deprel)
             sentence = []
             predicate = None
             predicate_id = -1
@@ -181,8 +179,8 @@ def split_phase(flattened_data_path):
                 predicate = word_info[FLATTEN2ID[LEMMA]]
                 predicate_id = int(word_info[FLATTEN2ID[WORD_ID]])
                 if predicate not in groundtruths:
-                    groundtruths[predicate] = deepcopy(init_arg_dict)
-                    predicts[predicate] = deepcopy(init_key_dict)
+                    groundtruths[predicate] = dict()
+                    predicts[predicate] = dict()
             sentence.append(word_info)
     assert(len(sentence)==0 and predicate is None)
     return groundtruths, predicts
