@@ -105,6 +105,7 @@ def split_phase(flattened_data_path):
                         rela_position = 'r' if int(word_info[4]) > predicate_id else 'l'
                         verbvoice = 'p' if sentence[predicate_id-1][FLATTEN2ID[POS]] == 'VBN' else 'a'
                         deprel = word_info[FLATTEN2ID[DEPREL]]
+                        preposition = _PAD_ if word_info[FLATTEN2ID[POS]] not in preposition2id else word_info[FLATTEN2ID[LEMMA]]
                         arg = word_info[FLATTEN2ID[SR]]
                         idx = (int(word_info[FLATTEN2ID[SENT_ID]]),int(word_info[FLATTEN2ID[PREDICATE_ID]]),int(word_info[FLATTEN2ID[WORD_ID]]))
                         arghead = find_argument_head(sentence, word_info)[FLATTEN2ID[LEMMA]].lower()
@@ -112,9 +113,8 @@ def split_phase(flattened_data_path):
                             arghead = _NUM_
                         if arg not in groundtruths[predicate]:
                             groundtruths[predicate][arg] = []
-                        preposition = _PAD_ if word_info[FLATTEN2ID[POS]] not in preposition2id else word_info[FLATTEN2ID[LEMMA]]
                         groundtruths[predicate][arg].append(idx)
-                        if (deprel,verbvoice,rela_position) not in predicts[predicate]:
+                        if (deprel,verbvoice,rela_position,preposition) not in predicts[predicate]:
                             predicts[predicate][(deprel,verbvoice,rela_position,preposition)] = Cluster([])
                         predicts[predicate][(deprel,verbvoice,rela_position,preposition)].append(idx,word_info[FLATTEN2ID[POS]],arghead)
             sentence = []
