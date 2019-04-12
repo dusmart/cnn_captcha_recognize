@@ -15,3 +15,30 @@ id, experiment, verb predicate/all predicate, calculate together/ verb by berb, 
 8, split-merge-alpha-0.1, true, true, test, 0.848 0.816 0.832, good signal
 9, split-merge-alpha-0.09, true, true, test, 0.846, 0.818, 0.832, lower the slpha
 10, split-merge-alpha-0.08, true, true, test, 0.839 0.820 0.829, bad signal
+
+11. split-merge-alpha-0.88-mutiple-glove, true, true, test, 0.803 0.816 0.810
+
+12. split-merge-alpha-0.99-mutiple-glove, true, ture, train, 0.846, 0.657, 0.740, good signal
+13. split-merge-alpha-0.995-mutiple-glove-less-steps, true, ture, train, 0.829, 0.717, 0.768, good signal
+14. split-merge-alpha-0.95-mutiple-glove-less-steps, true, ture, train, 0.790, 0.769, 0.779
+15. split-merge-alpha-0.94-mutiple-glove-less-steps, true, true, train, 0.767, 0.783, 0.775
+
+15. split-merge-0.75-glove-syn_sim, true, true, test, 0.865, 0.799, 0.831, slightly lower than baseline
+16. split-merge-0.77-glove-syn_sim, true, true, test, 0.876, 0.793, 0.832
+
+
+17. baseline-without-RC, false, true, train, 0.756, 0.712, 0.734
+18. baseline-without-RC, true, true, train, 0.816, 0.778, 0.797
+
+
+101. split-without-RC, true, true, train, 0.876, 0.649, 0.745
+102. split-merge-without-RC-gamma-0.6-alpha-0.1, true, true, train, 0.777, 0.821, 0.798
+103. split-merge-without-RC-gamma-0.8-alpha-0.1, true, true, train, 0.791, 0.816, 0.803
+104. split-merge-without-RC-gamma-0.95-alpha-0.1, true, true, train, 0.826, 0.791, 0.808
+105. split-merge-without-RC-gamma-0.95-alpha-0.15, true, true, train, 0.826, 0.791, 0.808
+106. split-merge-without-RC-gamma-0.97-alpha-0.1, true, true, train, 0.832, 0.788, 0.809
+
+111. glove-split-merge-without-RC-gamma-095-alpha-0.7, true, true, train, 0.741, 0.826, 0.781
+112. glove-split-merge-without-RC-gamma-095-alpha-0.75, true, true, train, 0.779, 0.796, 0.787
+112. glove-split-merge-without-RC-gamma-095-alpha-0.8, true, true, train, 0.851, 0.739, 0.791
+
