@@ -28,6 +28,8 @@ with open(arghead2id_path, 'rb') as fin:
     arghead2id = pickle.load(fin)
 with open(pos2id_path, 'rb') as fin:
     pos2id = pickle.load(fin)
+with open(preposition2id_path, 'rb') as fin:
+    preposition2id = pickle.load(fin)
 
 
 class Cluster:
@@ -110,10 +112,11 @@ def split_phase(flattened_data_path):
                             arghead = _NUM_
                         if arg not in groundtruths[predicate]:
                             groundtruths[predicate][arg] = []
+                        preposition = _PAD_ if word_info[FLATTEN2ID[POS]] not in preposition2id else word_info[FLATTEN2ID[LEMMA]]
                         groundtruths[predicate][arg].append(idx)
                         if (deprel,verbvoice,rela_position) not in predicts[predicate]:
-                            predicts[predicate][(deprel,verbvoice,rela_position)] = Cluster([])
-                        predicts[predicate][(deprel,verbvoice,rela_position)].append(idx,word_info[FLATTEN2ID[POS]],arghead)
+                            predicts[predicate][(deprel,verbvoice,rela_position,preposition)] = Cluster([])
+                        predicts[predicate][(deprel,verbvoice,rela_position,preposition)].append(idx,word_info[FLATTEN2ID[POS]],arghead)
             sentence = []
             predicate = None
             predicate_id = -1
