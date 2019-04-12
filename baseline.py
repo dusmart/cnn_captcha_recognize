@@ -47,7 +47,7 @@ def get_label(flattened_data_path):
     return groundtruths, predicts
 
 def main():
-    truths, predicts = get_label(flattened_test_data_path)
+    truths, predicts = get_label(flattened_train_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
     # set_truths, set_predicts = dict(), dict()

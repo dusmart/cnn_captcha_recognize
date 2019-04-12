@@ -168,7 +168,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 def main():
     Cluster.GAMMA = 0.95
     ALPHA = 0.1
-    truths, predicts = split_phase(flattened_test_data_path)
+    truths, predicts = split_phase(flattened_train_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
     final_pre = merge_phases(predicts, ALPHA)

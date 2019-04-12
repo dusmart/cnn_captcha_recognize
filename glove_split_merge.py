@@ -166,10 +166,10 @@ def split_phase(flattened_data_path):
                         if is_number(arghead):
                             arghead = _NUM_
                         if arg not in groundtruths[predicate]:
-                            groundtruths[predicate] = []
+                            groundtruths[predicate][arg] = []
                         groundtruths[predicate][arg].append(idx)
                         if (deprel,verbvoice,rela_position,preposition) not in predicts[predicate]:
-                            predicts[predicate] = Cluster([])
+                            predicts[predicate][(deprel,verbvoice,rela_position,preposition)] = Cluster([])
                         predicts[predicate][(deprel,verbvoice,rela_position,preposition)].append(idx,word_info[8],arghead,rela_position,verbvoice,deprel)
             sentence = []
             predicate = None
@@ -227,7 +227,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 
 def main():
-    truths, predicts = split_phase(flattened_test_data_path)
+    truths, predicts = split_phase(flattened_train_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
     final_pre = merge_phases(predicts, 0.6)
