@@ -304,6 +304,76 @@ def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file
     with open(pretrained_embed_path,'wb') as f:
         pickle.dump(pretrained_embedding,f)
 
+def shrink_pretrained_linear_embedding(train_file, dev_file, test_file, pretrained_large_emb_path, pretrained_large_vocab_path, pretrained_emb_size, pretrained_embed_path, id2pretrained_path, pretrained2id_path, pretrained_vocab_path, quiet=False):
+    """ shrink the embedding file to only those words occured in our dataset
+    """
+    word_set = set()
+    with open(train_file,'r') as f:
+        data = f.readlines()
+        for line in data:
+            if len(line.strip())>0:
+                line = line.strip().split('\t')
+                word_set.add(line[CONLL2ID[WORD]].lower())
+                word_set.add(line[CONLL2ID[LEMMA]].lower())
+    with open(dev_file,'r') as f:
+        data = f.readlines()
+        for line in data:
+            if len(line.strip())>0:
+                line = line.strip().split('\t')
+                word_set.add(line[CONLL2ID[WORD]].lower())
+                word_set.add(line[CONLL2ID[LEMMA]].lower())
+    with open(test_file,'r') as f:
+        data = f.readlines()
+        for line in data:
+            if len(line.strip())>0:
+                line = line.strip().split('\t')
+                word_set.add(line[CONLL2ID[WORD]].lower())
+                word_set.add(line[CONLL2ID[LEMMA]].lower())
+
+    pretrained_vocab = [_PAD_,_UNK_,_ROOT_,_NUM_]
+    pretrained_embedding = [
+                            [0.0]*pretrained_emb_size,
+                            [0.0]*pretrained_emb_size,
+                            [0.0]*pretrained_emb_size,
+                            [0.0]*pretrained_emb_size
+                        ]
+    
+    embedings = np.load(pretrained_large_emb_path)
+    with open(pretrained_large_vocab_path ,'r') as f:
+        for index, line in enumerate(f.readlines()):
+            word = line.strip().lower()
+            if word in word_set:
+                pretrained_vocab.append(word)
+                weight = list(embedings[index])
+                assert(len(weight)==pretrained_emb_size)
+                pretrained_embedding.append(weight)
+    pretrained_embedding = np.array(pretrained_embedding,dtype=float)
+
+    pretrained_to_idx = {word:idx for idx,word in enumerate(pretrained_vocab)}
+
+    idx_to_pretrained = {idx:word for idx,word in enumerate(pretrained_vocab)}
+
+    if not quiet:
+        print('\tshrink pretrained vocab size:{}'.format(len(pretrained_vocab)))
+        print('\tdataset sum:{} pretrained cover:{} coverage:{:.3}%'.format(len(word_set),len(pretrained_vocab),len(pretrained_vocab)/len(word_set)*100))
+
+    if not quiet:
+        print('\tdump vocab at:{}'.format(pretrained_vocab_path))
+
+    with open(pretrained_vocab_path, 'w') as f:
+        f.write('\n'.join(pretrained_vocab))
+
+    with open(pretrained2id_path,'wb') as f:
+        pickle.dump(pretrained_to_idx,f)
+
+    with open(id2pretrained_path,'wb') as f:
+        pickle.dump(idx_to_pretrained,f)
+
+    with open(pretrained_embed_path,'wb') as f:
+        pickle.dump(pretrained_embedding,f)
+
+
+
 # be careful when changing numbers in this function, I used raw number directly
 def flat_dataset(dataset_file, output_path):
     """ flatten a conll09 data file to flattened data file, see README for format details
