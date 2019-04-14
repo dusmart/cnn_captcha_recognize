@@ -196,7 +196,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                 no_zero_predicts[word].append(predicts[word][key])
         no_zero_predicts[word].sort(key = len, reverse=True)
 
-    for beta in tqdm(np.arange(0.95, -0.05, -0.1)):
+    for beta in tqdm(np.arange(0.95, 0.5, -0.1)):
         Cluster.BETA = beta
         for word in no_zero_predicts.keys():
             c_i, c_j = 0, 0
@@ -226,7 +226,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 def main():
     Cluster.GAMMA = 0.95
-    ALPHA = 0.6
+    ALPHA = 0.88
     truths, predicts = split_phase(flattened_train_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
