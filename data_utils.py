@@ -271,7 +271,7 @@ def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file
 
     with open(pretrained_file,'r') as f:
         for line in f.readlines():
-            row = line.split(' ')
+            row = line.split()
             word = row[0].lower()
             if word in word_set:
                 pretrained_vocab.append(word)
