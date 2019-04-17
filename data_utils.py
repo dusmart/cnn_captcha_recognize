@@ -270,14 +270,21 @@ def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file
                         ]
 
     with open(pretrained_file,'r') as f:
+        number_num = 0
         for line in f.readlines():
             row = line.split()
             word = row[0].lower()
+            if is_number(word):
+                number_num += 1
+                for i in range(pretrained_emb_size):
+                    pretrained_embedding[3][i] += row[1+i]
             if word in word_set:
                 pretrained_vocab.append(word)
                 weight = [float(item) for item in row[1:]]
                 assert(len(weight)==pretrained_emb_size)
                 pretrained_embedding.append(weight)
+        for i in range(pretrained_emb_size):
+            pretrained_embedding[3][i] /= number_num
 
     pretrained_embedding = np.array(pretrained_embedding,dtype=float)
 
@@ -340,13 +347,19 @@ def shrink_pretrained_linear_embedding(train_file, dev_file, test_file, pretrain
     
     embedings = np.load(pretrained_large_emb_path)
     with open(pretrained_large_vocab_path ,'r') as f:
+        number_num = 0
         for index, line in enumerate(f.readlines()):
             word = line.strip().lower()
+            if is_number(word):
+                number_num += 1
+                pretrained_embedding[3] += embedings[index]
             if word in word_set:
                 pretrained_vocab.append(word)
                 weight = list(embedings[index])
                 assert(len(weight)==pretrained_emb_size)
                 pretrained_embedding.append(weight)
+        for i in range(pretrained_emb_size):
+            pretrained_embedding[3][i] /= number_num
     pretrained_embedding = np.array(pretrained_embedding,dtype=float)
 
     pretrained_to_idx = {word:idx for idx,word in enumerate(pretrained_vocab)}
