@@ -11,7 +11,7 @@ from copy import deepcopy
 def find_argument_head(sentence: List[List[str]], word_info: List[str]) -> List[str]:
     """ find a child for given word in sentence, return None if not exists
     """
-    if word_info[8] != "IN":
+    if not is_preposition(word_info[8]):
         return word_info
     for i in range(len(sentence)-1, -1, -1):
         if sentence[i][10] == word_info[4]:
@@ -87,7 +87,7 @@ class Cluster:
             return 0
         elif self.cons_sim(other) < Cluster.GAMMA:
             return 0
-        return self.lex_sim(other) * self.DELTA + self.syn_sim(other) * (1-self.DELTA)
+        return self.lex_sim(other) * self.DELTA + self.pos_sim(other) * (1-self.DELTA)
     def __iadd__(self, other):
         assert(len(self) >= len(other))
         for i in range(self.LEX_GROUP):
@@ -225,7 +225,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 
 def main():
-    Cluster.GAMMA = 0.95
+    Cluster.GAMMA = 0.97
     ALPHA = 0.88
     truths, predicts = split_phase(flattened_train_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
