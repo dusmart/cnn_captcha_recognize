@@ -27,6 +27,11 @@ id, experiment, verb predicate/all predicate, calculate together/ verb by berb, 
 16. split-merge-0.77-glove-syn_sim, true, true, test, 0.876, 0.793, 0.832
 
 
+
+
+
+
+
 17. baseline-without-RC, false, true, train, 0.756, 0.712, 0.734
 18. baseline-without-RC, true, true, train, 0.816, 0.778, 0.797
 
@@ -42,8 +47,24 @@ id, experiment, verb predicate/all predicate, calculate together/ verb by berb, 
 112. glove-split-merge-without-RC-gamma-095-alpha-0.75, true, true, train, 0.779, 0.796, 0.787
 112. glove-split-merge-without-RC-gamma-095-alpha-0.8, true, true, train, 0.851, 0.739, 0.791
 
-121. skipgram-split-merge-without-RC-gamma-098-alpha-0.84, true, true, train, 0.811, 0.797, 0.804
+121. skipgram-split-merge-without-RC-gamma-095-alpha-0.84, true, true, train, 0.811, 0.797, 0.804
 
-131. cbow-split-merge-without-RC-gamma-098-alpha-0.88, true, true, train, 0.838, 0.774, 0.805
+131. cbow-split-merge-without-RC-gamma-095-alpha-0.88, true, true, train, 0.838, 0.774, 0.805
 
-141. glove-split-merge-without-RC-gamma-098-alpha-0.86, true, true, train, 0.815, 0.785, 0.800
+141. glove-split-merge-without-RC-gamma-095-alpha-0.86, true, true, train, 0.815, 0.785, 0.800
+
+151. depsr-split-merge-without-RC-gamma-095-alpha-0.88, true, true, train, 0.829, 0.781, 0.804
+152. depsr-split-merge-without-RC-gamma-097-alpha-0.88, true, true, train, 0.839, 0.776, 0.806
+153. depsr-split-merge-without-RC-gamma-097-alpha-0.88-deleteGAMMA, true, true, train, 0.838, 0.775, 0.806
+154. depsr-split-merge-without-RC-gamma-097-alpha-0.88-beta-0.5, true, true, train, 0.847, 0.770, 0.806
+155. depsr-split-merge-without-RC-gamma-097-alpha-0.88-beta-0, true, true, train, 0.818, 0.778, 0.797, beta is useful
+156. depsr-split-merge-without-RC-gamma-097-alpha-0.88-no_beta-delta-0.9, true, true, train, 0.837, 0.774, 0.804, beta filter is useful
+157. depsr-split-merge-without-RC-gamma-097-alpha-0.88-beta-0.5-cluster-7-deleteGAMMA, true, true, train, 0.841, 0.774, 0.806, cluster_group should be 7 rather than 5
+158. depsr-split-merge-without-RC-gamma-097-alpha-0.86-beta-0.5-cluster-7-deleteGAMMA, true, true, train, 0.839, 0.780, 0.808, the corresponding alpha is 0.86
+159. depsr50-split-merge-without-RC-gamma-097-alpha-0.88-beta-0.5-cluster-7-deleteGAMMA, true, true, train, 0.835, 0.785, 0.809, 50D word vector is good enough
+
+
+
+161. depglove-split-merge-without-RC-gamma-097-alpha-0.88-deleteGAMMA, true, true, train, 0.844, 0.763, 0.801
+
+162. depcbow-split-merge-without-RC-gamma-097-alpha-0.88-deleteGAMMA, true, true, train, 0.837， 0.766， 0.800
