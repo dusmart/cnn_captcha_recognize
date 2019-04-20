@@ -55,7 +55,7 @@ I used Conll09's training data for **evaluating** the method whose format will b
     16. argument label of the 3-rd predicate
     ...
 2. flattened format
-    0. sentence id (start from 1)
+    0. sentence id (start from 0)
     1. predicate id (start from 0)
     2. sentence length
     3. is predicate: 0 or 1
