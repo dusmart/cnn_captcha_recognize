@@ -447,7 +447,7 @@ def generate_bert_embedding(dataset_file, output_path):
     
     word_embedding = dict()
     
-    sent_id = 0
+    sent_id = -1
     for sentence in tqdm(sentences):
         sent_id += 1
         raw_sentence = []
