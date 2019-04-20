@@ -37,7 +37,7 @@ with open(preposition2id_path, 'rb') as fin:
 class Cluster:
     BETA = 0
     GAMMA = 0
-    LEX_GROUP = 5
+    LEX_GROUP = 1
     DELTA = 1
     def __init__(self, data: List[Tuple[str,str,str]]) -> None:
         self.data = data
@@ -61,7 +61,18 @@ class Cluster:
         weights = np.dot(np.transpose(self.lex_weight), other.lex_weight)
         #weights /= np.sum(np.sum(weights))
         weighted_scores = np.multiply(scores, weights)
-        return scores[np.unravel_index(np.argmax(weighted_scores, axis=None), weighted_scores.shape)]
+        return scores[np.unravel_index(np.argmax(weighted_scores, axis=None), scores.shape)]
+        # score = 0
+        # for i in range(self.LEX_GROUP):
+        #     if self.lex_weight[i] == 0:
+        #         continue
+        #     for j in range(other.LEX_GROUP):
+        #         if other.lex_weight[j] == 0:
+        #             continue
+        #         candidate = np.dot(self.lex[i,:], other.lex[j,:]) / np.linalg.norm(self.lex[i, :]) / np.linalg.norm(other.lex[j, :])
+        #         if candidate > score:
+        #             score = candidate
+        # return score
 
     def syn_sim(self, other) -> float:
         position = 1 - scipy.spatial.distance.cosine(self.left_right, other.left_right)
@@ -87,7 +98,7 @@ class Cluster:
             return 0
         elif self.cons_sim(other) < Cluster.GAMMA:
             return 0
-        return self.lex_sim(other) * self.DELTA + self.pos_sim(other) * (1-self.DELTA)
+        return self.lex_sim(other) * self.DELTA + self.pos_sim(other) * (1-self.DELTA) - (1-self.cons_sim(other))
     def __iadd__(self, other):
         assert(len(self) >= len(other))
         for i in range(self.LEX_GROUP):
@@ -109,8 +120,8 @@ class Cluster:
         else:
             candidate_score = np.dot(self.lex[0, :], np.array(embed))
             target = 0
-            for i in range(1, self.LEX_GROUP):
-                score = np.dot(self.lex[i], embed)
+            for i in range(0, self.LEX_GROUP):
+                score = np.dot(self.lex[i, :], np.array(embed))
                 if abs(self.lex_weight[i]) < 0.001:
                     target = i
                     break
@@ -196,9 +207,11 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
                 no_zero_predicts[word].append(predicts[word][key])
         no_zero_predicts[word].sort(key = len, reverse=True)
 
-    for beta in tqdm(np.arange(0.95, 0.5, -0.1)):
-        Cluster.BETA = beta
-        for word in no_zero_predicts.keys():
+    # for beta in tqdm(np.arange(0.95, 0.5, -0.1)):
+    #     Cluster.BETA = beta
+    Cluster.BETA = 0.3
+    for alpha in tqdm(np.arange(0.88, 0.87, -0.05)):
+        for word in tqdm(no_zero_predicts.keys()):
             c_i, c_j = 0, 0
             while c_i < len(no_zero_predicts[word]):
                 c_j, max_score = -1, 0
