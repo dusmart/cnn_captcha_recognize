@@ -7,9 +7,16 @@ flat_dataset(raw_dev_data_path, flattened_dev_data_path)
 flat_dataset(raw_sample_data_path, flattened_sample_data_path)
 
 print('\n-- shrink pretrained embeding --')
-shrink_pretrained_embedding(raw_train_data_path, raw_dev_data_path, raw_test_data_path,
-                            pretrained_glove_100, pretrained_emb_size, pretrained_embed_path,
-                            id2pretrained_path, pretrained2id_path, pretrained_vocab_path)
+# shrink_pretrained_embedding(raw_train_data_path, raw_dev_data_path, raw_test_data_path,
+#                             pretrained_glove_100, pretrained_emb_size, pretrained_embed_path,
+#                             id2pretrained_path, pretrained2id_path, pretrained_vocab_path)
+
+# shrink_pretrained_linear_embedding(raw_train_data_path, raw_dev_data_path, raw_test_data_path,
+#                             "pretrained_model/word_deps_sg_50d/words50.npy", "pretrained_model/word_deps_sg_50d/words50.vocab", pretrained_emb_size, pretrained_embed_path,
+#                             id2pretrained_path, pretrained2id_path, pretrained_vocab_path)
+# shrink_pretrained_linear_embedding(raw_train_data_path, raw_dev_data_path, raw_test_data_path,
+#                             "pretrained_model/word_linear_glove_100d/words100.npy", "pretrained_model/word_linear_glove_100d/words100.vocab", pretrained_emb_size, pretrained_embed_path,
+#                             id2pretrained_path, pretrained2id_path, pretrained_vocab_path)
 
 
 vocab_maker = VocabMaker(raw_train_data_path, raw_test_data_path, raw_dev_data_path)
@@ -20,3 +27,8 @@ vocab_maker.make_vocab(preposition_vocab_path, preposition2id_path, id2prepositi
 vocab_maker.make_vocab(argspan_vocab_path, argspan2id_path, id2argspan_path, "argspan")
 vocab_maker.make_vocab(arghead_vocab_path, arghead2id_path, id2arghead_path, "arghead")
 vocab_maker.make_vocab(argpos_vocab_path, argpos2id_path, id2argpos_path, "arg_pos_rel")
+
+
+
+# generate_bert_embedding("raw_data/conll09_sample.dataset","temp/conll09_sample_bert_embedding")
+generate_bert_embedding("raw_data/conll09_train.dataset","temp/conll09_train_bert_embedding")
