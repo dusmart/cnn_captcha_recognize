@@ -427,3 +427,43 @@ def flat_dataset(dataset_file, output_path):
                         f.write('\n')
                     f.write('\n')
                     predicate_idx += 1
+
+def generate_bert_embedding(dataset_file, output_path):
+    from bert_embedding import BertEmbedding
+    bert_embedding = BertEmbedding()
+    
+    with open(dataset_file,'r') as f:
+        data = f.readlines()
+    sentences = []
+    sentence = []
+    for i in range(len(data)):
+        if len(data[i].strip())>0:
+            sentence.append(data[i].strip().split('\t'))
+        else:
+            sentences.append(sentence)
+            sentence = []
+    if len(sentence) > 0:
+        sentences.append(sentence)
+    
+    word_embedding = dict()
+    
+    sent_id = 0
+    for sentence in tqdm(sentences):
+        sent_id += 1
+        raw_sentence = []
+        for word_info in sentence:
+            raw_sentence.append(word_info[1])
+        for word_id in range(len(sentence)):
+            flag = 0
+            for i in range(len(CONLL2ID), len(sentence[word_id])):
+                if is_normal_argument(sentence[word_id][i]):
+                    flag += 1
+                    break
+            if flag:
+                start = max(0,word_id-11)
+                end = min(word_id+12, len(sentence))
+                result = bert_embedding([" ".join(raw_sentence[start:end])])[0][1][word_id-start]
+                word_embedding[(sent_id, word_id+1)] = result
+    
+    with open(output_path,'wb') as f:
+        pickle.dump(word_embedding,f)
