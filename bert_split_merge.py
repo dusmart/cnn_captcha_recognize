@@ -208,26 +208,25 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
     # for beta in tqdm(np.arange(0.95, 0.5, -0.1)):
     #     Cluster.BETA = beta
     Cluster.BETA = 0.3
-    for alpha in tqdm(np.arange(0.88, 0.87, -0.05)):
-        for word in tqdm(no_zero_predicts.keys()):
-            c_i, c_j = 0, 0
-            while c_i < len(no_zero_predicts[word]):
-                c_j, max_score = -1, 0
-                for j in range(c_i):
-                    score = no_zero_predicts[word][c_i].score(no_zero_predicts[word][j])
-                    if score > max_score:
-                        max_score = score
-                        c_j = j
-                if max_score > alpha:
-                    no_zero_predicts[word][c_j] += no_zero_predicts[word][c_i]
-                    del no_zero_predicts[word][c_i]
-                    for c_k in range(c_j, 0, -1):
-                        if len(no_zero_predicts[word][c_k]) > len(no_zero_predicts[word][c_k-1]):
-                            no_zero_predicts[word][c_k], no_zero_predicts[word][c_k-1] = no_zero_predicts[word][c_k-1], no_zero_predicts[word][c_k]
-                        else:
-                            break
-                else:
-                    c_i += 1
+    for word in tqdm(no_zero_predicts.keys()):
+        c_i, c_j = 0, 0
+        while c_i < len(no_zero_predicts[word]):
+            c_j, max_score = -1, 0
+            for j in range(c_i):
+                score = no_zero_predicts[word][c_i].score(no_zero_predicts[word][j])
+                if score > max_score:
+                    max_score = score
+                    c_j = j
+            if max_score > alpha:
+                no_zero_predicts[word][c_j] += no_zero_predicts[word][c_i]
+                del no_zero_predicts[word][c_i]
+                for c_k in range(c_j, 0, -1):
+                    if len(no_zero_predicts[word][c_k]) > len(no_zero_predicts[word][c_k-1]):
+                        no_zero_predicts[word][c_k], no_zero_predicts[word][c_k-1] = no_zero_predicts[word][c_k-1], no_zero_predicts[word][c_k]
+                    else:
+                        break
+            else:
+                c_i += 1
     final_predicts = dict()
     for word, clusters_list in no_zero_predicts.items():
         clusters_dict = {i: cluster for i, cluster in enumerate(clusters_list)}
@@ -237,7 +236,7 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
 
 def main():
     Cluster.GAMMA = 0.97
-    ALPHA = 0.88
+    ALPHA = 0.3
     truths, predicts = split_phase(flattened_sample_data_path)
     pre, coll, f1 = evaluation(truths, predicts)
     print(pre, coll, f1)
