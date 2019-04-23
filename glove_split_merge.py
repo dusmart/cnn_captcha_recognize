@@ -59,6 +59,7 @@ class Cluster:
             if abs(norm2) >= 0.00001:
                 scores[:, i] /= norm2
         weights = np.dot(np.transpose(self.lex_weight), other.lex_weight)
+        #weights = weights > 0.1 * len(self.data) * len(other.data)
         #weights /= np.sum(np.sum(weights))
         weighted_scores = np.multiply(scores, weights)
         return scores[np.unravel_index(np.argmax(weighted_scores, axis=None), scores.shape)]
@@ -210,7 +211,8 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
     # for beta in tqdm(np.arange(0.95, 0.5, -0.1)):
     #     Cluster.BETA = beta
     Cluster.BETA = 0.3
-    for alpha in tqdm(np.arange(0.88, 0.87, -0.05)):
+    alpha = 0.88
+    if True:
         for word in tqdm(no_zero_predicts.keys()):
             c_i, c_j = 0, 0
             while c_i < len(no_zero_predicts[word]):
