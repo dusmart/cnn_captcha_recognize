@@ -221,17 +221,17 @@ class VocabMaker:
 
     def get_paddings(self, symbol_type):
         if symbol_type == WORD or symbol_type == LEMMA:
-            return [_PAD_, _UNK_, _ROOT_, _NUM_]
+            return [_NUM_]
         elif symbol_type == "preposition":
-            return [_PAD_, _UNK_]
+            return []
         elif symbol_type == POS:
-            return [_PAD_,_UNK_,_ROOT_]
+            return []
         elif symbol_type == DEPREL:
-            return [_PAD_,_UNK_]
+            return []
         elif symbol_type == "arg":
-            return [_PAD_,_UNK_]
+            return []
         elif symbol_type == "arghead":
-            return [_PAD_,_UNK_, _NUM_]
+            return [_NUM_]
         else:
             return []
 
@@ -277,7 +277,7 @@ def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file
             if is_number(word):
                 number_num += 1
                 for i in range(pretrained_emb_size):
-                    pretrained_embedding[3][i] += row[1+i]
+                    pretrained_embedding[3][i] += float(row[1+i])
             if word in word_set:
                 pretrained_vocab.append(word)
                 weight = [float(item) for item in row[1:]]
