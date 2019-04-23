@@ -69,3 +69,11 @@ id, experiment, verb predicate/all predicate, calculate together/ verb by berb, 
 161. depglove-split-merge-without-RC-gamma-097-alpha-0.88-deleteGAMMA, true, true, train, 0.844, 0.763, 0.801
 
 162. depcbow-split-merge-without-RC-gamma-097-alpha-0.88-deleteGAMMA, true, true, train, 0.837， 0.766， 0.800
+
+
+
+
+
+201. baseline, predicted, 77.2, 71.5, 74.2
+202. split-merge, predicted, 79.2, 74.3, 76.7
+203. depsg-split-merge, predicted, 79.7, 74.9, 77.2
