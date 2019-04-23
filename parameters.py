@@ -1,15 +1,15 @@
 import os
 
-USE_GROUNDTRUTH = True
+USE_GROUNDTRUTH = False
 GROUNDTRUTH = "_g"
 PREDICTED = "_p"
 
 WORD_ID = "word_id"
 WORD = "word"
 LEMMA = "lemma" + GROUNDTRUTH if USE_GROUNDTRUTH else "lemma" + PREDICTED
-POS = "pos" + GROUNDTRUTH if USE_GROUNDTRUTH else "lemma" + PREDICTED
-DEPHEAD = "dephead"  + GROUNDTRUTH if USE_GROUNDTRUTH else "lemma" + PREDICTED
-DEPREL = "deprel"  + GROUNDTRUTH if USE_GROUNDTRUTH else "lemma" + PREDICTED
+POS = "pos" + GROUNDTRUTH if USE_GROUNDTRUTH else "pos" + PREDICTED
+DEPHEAD = "dephead"  + GROUNDTRUTH if USE_GROUNDTRUTH else "dephead" + PREDICTED
+DEPREL = "deprel"  + GROUNDTRUTH if USE_GROUNDTRUTH else "deprel" + PREDICTED
 IS_PREDICATE = "is_predicate"
 SENT_ID = "sent_id"
 PREDICATE_ID = "predicate_id"
