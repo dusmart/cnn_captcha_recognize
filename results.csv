@@ -62,6 +62,7 @@ id, experiment, verb predicate/all predicate, calculate together/ verb by berb, 
 157. depsr-split-merge-without-RC-gamma-097-alpha-0.88-beta-0.5-cluster-7-deleteGAMMA, true, true, train, 0.841, 0.774, 0.806, cluster_group should be 7 rather than 5
 158. depsr-split-merge-without-RC-gamma-097-alpha-0.86-beta-0.5-cluster-7-deleteGAMMA, true, true, train, 0.839, 0.780, 0.808, the corresponding alpha is 0.86
 159. depsr50-split-merge-without-RC-gamma-097-alpha-0.88-beta-0.5-cluster-7-deleteGAMMA, true, true, train, 0.835, 0.785, 0.809, 50D word vector is good enough
+1591. depsr50-split-merge-without-RC-gamma-097-alpha-0.99_to_0.88-beta-0.5-cluster-7-deleteGAMMA, true, true, train, 0.829, 0.791, 0.810, 50D word vector is good enough
 
 
 
