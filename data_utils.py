@@ -311,7 +311,7 @@ def shrink_pretrained_embedding(train_file, dev_file, test_file, pretrained_file
     with open(pretrained_embed_path,'wb') as f:
         pickle.dump(pretrained_embedding,f)
 
-def shrink_pretrained_linear_embedding(train_file, dev_file, test_file, pretrained_large_emb_path, pretrained_large_vocab_path, pretrained_emb_size, pretrained_embed_path, id2pretrained_path, pretrained2id_path, pretrained_vocab_path, quiet=False):
+def shrink_pretrained_vsm_embedding(train_file, dev_file, test_file, pretrained_large_emb_path, pretrained_large_vocab_path, pretrained_emb_size, pretrained_embed_path, id2pretrained_path, pretrained2id_path, pretrained_vocab_path, quiet=False):
     """ shrink the embedding file to only those words occured in our dataset
     """
     word_set = set()

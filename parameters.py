@@ -74,7 +74,9 @@ pretrained_model_path = os.path.join(os.path.dirname(__file__), "pretrained_mode
 
 
 pretrained_glove_100 = os.path.join(pretrained_model_path, "glove.100d.txt")
-pretrained_emb_size = 100
+pretrained_vsm_npy = os.path.join(pretrained_model_path, "word_deps_sg_50d/words50.npy")
+pretrained_vsm_vocab = os.path.join(pretrained_model_path, "word_deps_sg_50d/words50.vocab")
+pretrained_emb_size = 50
 
 raw_train_data_path = os.path.join(raw_data_path, "conll09_train.dataset")
 raw_test_data_path = os.path.join(raw_data_path, "conll09_test.dataset")
