@@ -197,7 +197,7 @@ def split_phase(flattened_data_path):
     assert(len(sentence)==0 and predicate is None)
     return groundtruths, predicts
 
-def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str, Dict[Any, Any]]:
+def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha_end: float) -> Dict[str, Dict[Any, Any]]:
     print("=== merging ===")
 
     no_zero_predicts = dict()
@@ -211,8 +211,9 @@ def merge_phases(predicts: Dict[str, Dict[Any, Any]], alpha: float) -> Dict[str,
     # for beta in tqdm(np.arange(0.95, 0.5, -0.1)):
     #     Cluster.BETA = beta
     Cluster.BETA = 0.3
-    alpha = 0.88
-    if True:
+    alpha = 1
+    while alpha > alpha_end:
+        alpha *= 0.99
         for word in tqdm(no_zero_predicts.keys()):
             c_i, c_j = 0, 0
             while c_i < len(no_zero_predicts[word]):
